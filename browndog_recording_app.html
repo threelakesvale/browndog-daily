@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Browndog Daily — Recording Studio</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Source+Sans+3:wght@300;400;600;700&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --navy:#1B2B4B;--orange:#E8620A;--cream:#FFF8F0;
+    --green:#2E7D32;--lgreen:#E8F5E9;--purple:#4A1A6B;
+    --lpurple:#F3E5F5;
+  }
+  body{background:var(--navy);font-family:'Source Sans 3',sans-serif;min-height:100vh;color:var(--navy)}
+
+  .top-bar{background:var(--orange);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+  .top-bar h1{font-family:'Libre Baskerville',serif;font-size:17px;color:white}
+  .top-bar .dog{font-size:20px}
+
+  .tabs{display:flex;background:var(--navy);border-bottom:2px solid var(--orange)}
+  .tab-btn{flex:1;padding:11px 6px;background:none;border:none;color:rgba(255,255,255,0.5);font-family:'Source Sans 3',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s}
+  .tab-btn.active{color:white;border-bottom:3px solid var(--orange);margin-bottom:-2px}
+
+  .date-nav{background:var(--navy);padding:10px 16px;display:flex;align-items:center;gap:8px}
+  .date-nav select{flex:1;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:white;font-family:'Source Sans 3',sans-serif;font-size:14px;font-weight:600;padding:9px 12px;border-radius:8px;appearance:none;-webkit-appearance:none}
+  .nav-btn{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:white;font-size:18px;width:40px;height:40px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .nav-btn:active{background:rgba(255,255,255,0.25)}
+
+  .card{background:var(--cream)}
+  .section{padding:14px 18px;border-bottom:1px solid rgba(27,43,75,0.1)}
+  .lbl{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:7px;display:flex;align-items:center;gap:5px}
+  .lbl-g{color:var(--green)}.lbl-n{color:var(--navy)}.lbl-p{color:var(--purple)}.lbl-r{color:#B71C1C}
+
+  .prompt-box{font-size:14px;line-height:1.55;color:var(--navy);background:var(--lgreen);padding:12px 14px;border-radius:9px;border-left:4px solid var(--green)}
+  .moment-input{width:100%;min-height:88px;background:white;border:2px solid var(--purple);border-radius:9px;padding:12px 14px;font-family:'Source Sans 3',sans-serif;font-size:16px;line-height:1.5;color:var(--navy);resize:vertical;-webkit-appearance:none}
+  .moment-input::placeholder{color:#aaa;font-style:italic}
+  .moment-input:focus{outline:none;border-color:var(--orange)}
+
+  .voice-bar{display:flex;align-items:center;gap:10px;margin-top:10px}
+  .mic-btn{width:52px;height:52px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;transition:all 0.2s;background:var(--navy);color:white;box-shadow:0 2px 8px rgba(0,0,0,0.2)}
+  .mic-btn.listening{background:var(--orange);animation:pulse 1.2s infinite}
+  .mic-btn:active{transform:scale(0.93)}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(232,98,10,0.5)}50%{box-shadow:0 0 0 10px rgba(232,98,10,0)}}
+  .voice-status{flex:1;font-size:13px;color:#999;font-style:italic}
+  .voice-status.active{color:var(--orange);font-weight:600;font-style:normal}
+  .redo-btn{background:none;border:1px solid #ddd;border-radius:7px;padding:7px 12px;font-size:12px;color:#999;cursor:pointer;font-family:'Source Sans 3',sans-serif;opacity:0;pointer-events:none;transition:opacity 0.2s}
+  .redo-btn.show{opacity:1;pointer-events:all}
+
+  .script-box{background:white;border-radius:9px;padding:16px;font-size:16px;line-height:1.8;color:var(--navy);white-space:pre-wrap}
+  .wlc{color:var(--green);font-style:italic}
+  .mph{color:#ccc;font-style:italic}
+  .mok{color:var(--purple);font-weight:600}
+  .clsr{color:var(--orange);font-family:'Libre Baskerville',serif;font-size:18px;font-weight:700}
+
+  .closer-pill{background:var(--orange);color:white;font-family:'Libre Baskerville',serif;font-size:19px;font-weight:700;padding:14px 18px;border-radius:9px;text-align:center}
+
+  .spotify-sec{background:var(--cream);padding:14px 18px 18px}
+  .sp-row{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+  .sp-field{background:white;border:1px solid #ddd;border-radius:8px;padding:12px 14px}
+  .sp-field .sp-lbl{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#999;margin-bottom:4px}
+  .sp-field .sp-val{font-size:14px;line-height:1.5;color:var(--navy)}
+  .cp-btn{margin-top:8px;width:100%;background:var(--navy);color:white;border:none;border-radius:7px;padding:10px;font-family:'Source Sans 3',sans-serif;font-size:13px;font-weight:700;cursor:pointer}
+  .cp-btn:active{background:#0d1c33}
+  .cp-btn.copied{background:var(--green)}
+
+  .actions{padding:14px 18px 32px;display:flex;flex-direction:column;gap:9px;background:var(--cream)}
+  .btn-all{background:var(--navy);color:white;border:none;border-radius:9px;padding:15px;font-family:'Source Sans 3',sans-serif;font-size:15px;font-weight:700;cursor:pointer}
+  .btn-all:active{background:#0d1c33}
+  .btn-all.copied{background:var(--green)}
+  .btn-clr{background:transparent;color:#999;border:1px solid #ddd;border-radius:9px;padding:11px;font-family:'Source Sans 3',sans-serif;font-size:13px;cursor:pointer}
+
+  .sdot{width:7px;height:7px;border-radius:50%;background:#ddd;display:inline-block;margin-right:5px;transition:background 0.3s}
+  .sdot.ready{background:var(--green)}
+  .deed-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .dtag{background:var(--navy);color:white;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <h1>Browndog Daily</h1>
+  <span class="dog">🐕</span>
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active" id="tab-daily" onclick="switchTab('daily')">📅 Daily Joy</button>
+  <button class="tab-btn" id="tab-deeds" onclick="switchTab('deeds')">🤝 Good Deeds</button>
+</div>
+
+<!-- DAILY -->
+<div id="panel-daily">
+  <div class="date-nav">
+    <button class="nav-btn" onclick="chg(-1,'daily')">‹</button>
+    <select id="dsel" onchange="loadD(this.value)"></select>
+    <button class="nav-btn" onclick="chg(1,'daily')">›</button>
+  </div>
+  <div class="card">
+    <div class="section"><div class="lbl lbl-g">🎙 Browndog Moment Prompt</div><div class="prompt-box" id="d-prompt"></div></div>
+    <div class="section">
+      <div class="lbl lbl-p">✍️ Your Browndog Moment — type or speak</div>
+      <textarea class="moment-input" id="d-moment" placeholder="Riff on the prompt. One or two real sentences. Something that happened, a habit you keep meaning to start, something from Lakeway, something about building Browndog..." oninput="updD();showRedoIfText()" rows="4"></textarea>
+      <div class="voice-bar">
+        <button class="mic-btn" id="mic-btn" onclick="toggleMic()" title="Tap to speak your moment">🎙</button>
+        <span class="voice-status" id="voice-status">Tap the mic to speak your moment</span>
+        <button class="redo-btn" id="redo-btn" onclick="redoMic()">↺ Redo</button>
+      </div>
+    </div>
+    <div class="section"><div class="lbl lbl-n"><span class="sdot" id="d-dot"></span>📻 Recording Script</div><div class="script-box" id="d-script"></div></div>
+    <div class="section"><div class="lbl" style="color:var(--orange)">👋 Sign Off</div><div class="closer-pill" id="d-closer"></div></div>
+  </div>
+  <div class="spotify-sec">
+    <div class="lbl lbl-r">🎵 Paste into Spotify Creator</div>
+    <div class="sp-row">
+      <div class="sp-field"><div class="sp-lbl">Episode Title</div><div class="sp-val" id="d-title"></div><button class="cp-btn" id="d-tbtn" onclick="cpf('d-title','d-tbtn','Title')">📋 Copy Title</button></div>
+      <div class="sp-field"><div class="sp-lbl">Episode Description</div><div class="sp-val" id="d-desc"></div><button class="cp-btn" id="d-dbtn" onclick="cpf('d-desc','d-dbtn','Description')">📋 Copy Description</button></div>
+    </div>
+  </div>
+  <div class="actions">
+    <button class="btn-all" id="d-all" onclick="cpAll('daily')">📋 Copy Full Script</button>
+    <button class="btn-clr" onclick="clrM()">Clear my moment</button>
+  </div>
+</div>
+
+<!-- GOOD DEEDS -->
+<div id="panel-deeds" style="display:none">
+  <div class="date-nav">
+    <button class="nav-btn" onclick="chg(-1,'deeds')">‹</button>
+    <select id="gsel" onchange="loadG(this.value)"></select>
+    <button class="nav-btn" onclick="chg(1,'deeds')">›</button>
+  </div>
+  <div class="card">
+    <div class="section"><div class="lbl lbl-n">🤝 The Good Deed</div><div class="script-box" id="g-script" style="font-size:15px"></div><div class="deed-meta" id="g-meta"></div></div>
+    <div class="section"><div class="lbl" style="color:var(--orange)">👋 Sign Off</div><div class="closer-pill" id="g-closer"></div></div>
+  </div>
+  <div class="spotify-sec">
+    <div class="lbl lbl-r">🎵 Paste into Spotify Creator</div>
+    <div class="sp-row">
+      <div class="sp-field"><div class="sp-lbl">Episode Title</div><div class="sp-val" id="g-title"></div><button class="cp-btn" id="g-tbtn" onclick="cpf('g-title','g-tbtn','Title')">📋 Copy Title</button></div>
+      <div class="sp-field"><div class="sp-lbl">Episode Description</div><div class="sp-val" id="g-desc"></div><button class="cp-btn" id="g-dbtn" onclick="cpf('g-desc','g-dbtn','Description')">📋 Copy Description</button></div>
+    </div>
+  </div>
+  <div class="actions">
+    <button class="btn-all" id="g-all" onclick="cpAll('deeds')">📋 Copy Full Script</button>
+  </div>
+</div>
+
+<script>
+const D=[
+{date:"March 1",day:"Sunday",prompt:"🌱 Building Browndog: What's one thing about launching this that went nothing like you expected?",closer:"Love. Love. See ya tomorrow.",title:"Browndog Daily | A Bridge to Spring",desc:"A new month needs a new breath of air. Literally. Step outside, call someone, set three intentions. browndog.com",top:"March is the bridge to Spring. Let's cross it.\n\nHey, I'm Vale. This is Browndog Daily.\n\nStep outside for two minutes and feel the air. Just two minutes.\n\nCall a friend today and tell them you're thinking of them. Not a text — a call.\n\nSet your top three intentions for the month."},
+{date:"March 2",day:"Monday",prompt:"☕ Morning routine: What does your actual morning look like vs. what you planned it would look like?",closer:"Love. Love. Talk tomorrow.",title:"Browndog Daily | That First Sip",desc:"Monday doesn't have to hit hard. Savor the first sip. Leave a note. Write three things down. browndog.com",top:"A new month, a new Monday.\n\nHey, I'm Vale. This is Browndog Daily.\n\nBrew your favorite drink and actually drink it. No phone. No news. Just that first sip.\n\nWrite a short note to a neighbor and leave it at their door.\n\nMake a list of three things you want to get done this week."},
+{date:"March 3",day:"Tuesday",prompt:"🎵 Habits: What's a habit you keep meaning to start — and what keeps getting in the way?",closer:"Love. Love. Go play that song.",title:"Browndog Daily | Play the Whole Song",desc:"Play the whole song. Walk into a local business and mean it. Answer the thing you've been avoiding. browndog.com",top:"Tuesday energy. Let's use it.\n\nHey, I'm Vale. This is Browndog Daily.\n\nPut on a song you love and listen to it all the way through. No skipping.\n\nWalk into a local business today and tell them you appreciate them.\n\nAnswer one message you've been putting off."},
+{date:"March 4",day:"Wednesday",prompt:"🌿 Lakeway: What's something you've noticed blooming or changing in your neighborhood this week?",closer:"Love. Love. Catch you tomorrow.",title:"Browndog Daily | Something's Blooming",desc:"Something is blooming on your street right now. Go find it. Then call the family member you've been meaning to call. browndog.com",top:"Halfway to the weekend. Let's connect.\n\nHey, I'm Vale. This is Browndog Daily.\n\nTake a ten-minute walk and notice what's blooming.\n\nCall a family member you haven't talked to in a while.\n\nWater a plant that looks thirsty."},
+{date:"March 5",day:"Thursday",prompt:"📚 Small acts: Tell me about a time a small thing — holding a door, a smile — landed bigger than you expected.",closer:"Love. Love. Go hold that door.",title:"Browndog Daily | Small Acts",desc:"A chapter. A real smile at a door. One pile sorted. Small acts today — big difference by Friday. browndog.com",top:"Thursday. Small acts, big difference.\n\nHey, I'm Vale. This is Browndog Daily.\n\nRead a chapter of a book just for fun.\n\nHold the door open for someone and give them a real smile.\n\nSort through one pile of mail or papers."},
+{date:"March 6",day:"Friday",prompt:"😄 Conversation: What's a conversation you almost skipped this week — and what happened when you didn't?",closer:"Love. Love. Go make someone laugh.",title:"Browndog Daily | You Made It to Friday",desc:"You made it to Friday. Write down three real things you're grateful for. Then make someone laugh. browndog.com",top:"It's Friday. You made it.\n\nHey, I'm Vale. This is Browndog Daily.\n\nWrite down three things you're grateful for from this week.\n\nTell someone a joke or share something that made you laugh.\n\nPlan one good meal for the weekend."},
+{date:"March 7",day:"Saturday",prompt:"🥾 Lakeway: What's a trail or park near you that you keep meaning to get back to?",closer:"Love. Love. See ya.",title:"Browndog Daily | Find That Trail",desc:"There's a trail nearby you keep meaning to get back to. Today's the day. browndog.com",top:"Saturday morning. Take it slow.\n\nHey, I'm Vale. This is Browndog Daily.\n\nVisit a park or trail you haven't been to in a while.\n\nTake a photo of something beautiful and show it to someone in person.\n\nDo one load of laundry start to finish."},
+{date:"March 8",day:"Sunday",prompt:"☕ Morning routine: What does a quiet Sunday morning actually look like for you — vs. what you wish it looked like?",closer:"Love. Love. Talk tomorrow.",title:"Browndog Daily | A Quiet Sunday",desc:"A quiet Sunday with a warm drink and no agenda. Tell someone in your house one real thing you appreciate about them. browndog.com",top:"A quiet Sunday to recharge.\n\nHey, I'm Vale. This is Browndog Daily.\n\nSit somewhere comfortable with a warm drink and no agenda.\n\nTell someone in your house one thing you appreciate about them.\n\nLay out what you need for Monday morning."},
+{date:"March 9",day:"Monday",prompt:"🌱 Habits: What's one small morning habit you've been meaning to add — and why does Monday feel like the right day?",closer:"Love. Love. Go stretch it out.",title:"Browndog Daily | Fresh Start",desc:"New week. Five minutes of stretching, three smiles, one made bed. Fresh start costs nothing. browndog.com",top:"New week. Fresh start.\n\nHey, I'm Vale. This is Browndog Daily.\n\nStretch for five minutes before you start your day.\n\nSmile at three people today.\n\nMake your bed with intention."},
+{date:"March 10",day:"Tuesday",prompt:"🎨 Building Browndog: What's something about the creative side of this that surprised you?",closer:"Love. Love. Go draw something terrible.",title:"Browndog Daily | Doodle Something",desc:"Some creativity doesn't require talent. Just ten minutes and a pen. Today's Daily Joy. browndog.com",top:"Tuesday. A little creativity goes a long way.\n\nHey, I'm Vale. This is Browndog Daily.\n\nDoodle or sketch for ten minutes. No skill required.\n\nPay someone a specific compliment today. Something real.\n\nClean off your kitchen counter."},
+{date:"March 11",day:"Wednesday",prompt:"📱 Habits: How long does it actually take you to put your phone down when you mean to?",closer:"Love. Love. Go look up.",title:"Browndog Daily | Look Up",desc:"Go outside and look up for two minutes. Then call someone and actually listen. browndog.com",top:"Mid-week check-in. How are you doing?\n\nHey, I'm Vale. This is Browndog Daily.\n\nGo outside and look up at the sky for two minutes.\n\nCall someone and ask how they're really doing. Then actually listen.\n\nDrink a full glass of water right now."},
+{date:"March 12",day:"Thursday",prompt:"📷 Morning routine: Do you have a box of old photos somewhere? What's in it you haven't looked at in years?",closer:"Love. Love. Catch you tomorrow.",title:"Browndog Daily | The Photo That Stops You",desc:"There's a photo somewhere that will stop you cold. Go find it. Then knock on a neighbor's door. browndog.com",top:"Thursday's plan: simple, tangible good.\n\nHey, I'm Vale. This is Browndog Daily.\n\nFlip through an old photo album or a box of photos.\n\nDrop off something small to a neighbor.\n\nTake out the recycling."},
+{date:"March 13",day:"Friday",prompt:"🎵 Habits: What song do you still know every word to — and would never admit to in a meeting?",closer:"Love. Love. Go crank it.",title:"Browndog Daily | Lucky Friday",desc:"Friday the 13th. Lucky playlist, a real thank-you by name, and clean glasses. You're welcome. browndog.com",top:"Friday the 13th. We're making it lucky.\n\nHey, I'm Vale. This is Browndog Daily.\n\nPull up an upbeat playlist from when you were younger and let it run.\n\nThank a service worker by name today.\n\nClean your phone screen and glasses."},
+{date:"March 14",day:"Saturday",prompt:"🏡 Lakeway: Who's a neighbor you keep meaning to actually talk to — not just wave at?",closer:"Love. Love. Go grab a chair.",title:"Browndog Daily | Porch Time",desc:"Porch. Fifteen minutes. Invite a neighbor. That's the whole plan. browndog.com",top:"Spring is in the air. Porch time.\n\nHey, I'm Vale. This is Browndog Daily.\n\nSit on your porch or stoop for fifteen minutes.\n\nInvite a neighbor to sit with you.\n\nSweep your front porch or entryway."},
+{date:"March 15",day:"Sunday",prompt:"🙌 Building Browndog: What's something you've made for this company that you're actually proud of?",closer:"Love. Love. Go make something.",title:"Browndog Daily | Make Something",desc:"Make something with your hands today. A recipe, a letter, anything. Then share it. browndog.com",top:"A slow Sunday. The best kind.\n\nHey, I'm Vale. This is Browndog Daily.\n\nMake something with your hands today.\n\nShare what you made with someone.\n\nSet out your clothes for tomorrow."},
+{date:"March 16",day:"Monday",prompt:"✍️ Habits: What's your real Monday morning ritual — vs. what you'd tell someone it is?",closer:"Love. Love. Go find that pen.",title:"Browndog Daily | One Intention",desc:"One intention — not a goal. A handwritten note to someone. One drawer. Monday done right. browndog.com",top:"Monday. Purpose, not just caffeine.\n\nHey, I'm Vale. This is Browndog Daily.\n\nWrite down one intention for the week.\n\nSend a handwritten note to someone. Actual pen. Actual paper.\n\nOrganize one drawer."},
+{date:"March 17",day:"Tuesday — St. Patrick's Day",prompt:"🍀 Conversation: What's the luckiest conversation you've had while building Browndog?",closer:"Love. Love. Go find something green.",title:"Browndog Daily | Luck Is Optional",desc:"Wear green. Call an old friend. Try a new recipe. Luck is optional. Joy is not. browndog.com",top:"St. Patrick's Day. Luck is optional. Joy is not.\n\nHey, I'm Vale. This is Browndog Daily.\n\nWear something green today. Even if nobody sees it.\n\nCall an old friend and catch up for ten minutes.\n\nTry a new recipe for dinner tonight."},
+{date:"March 18",day:"Wednesday",prompt:"🚶 Lakeway: What's a route you take on autopilot — and what do you think you've been missing?",closer:"Love. Love. Take the long way.",title:"Browndog Daily | Take the Long Way",desc:"Take a different route today. Leave a kind note in a library book. Wipe down the mirror. browndog.com",top:"Back to it after the holiday.\n\nHey, I'm Vale. This is Browndog Daily.\n\nTake a different route on your walk today.\n\nLeave a kind note in a library book.\n\nWipe down your bathroom mirror and sink."},
+{date:"March 19",day:"Thursday",prompt:"🌬️ Building Browndog: What's something about building this that needed a reset to see clearly?",closer:"Love. Love. Go open that window.",title:"Browndog Daily | Open a Window",desc:"Open a window. Knock on a neighbor's door for no reason. Check the medicine cabinet. browndog.com",top:"Mid-week. Spring is knocking. Let it in.\n\nHey, I'm Vale. This is Browndog Daily.\n\nOpen a window and let fresh air in for ten minutes.\n\nKnock on a neighbor's door just to say hello.\n\nGo through your medicine cabinet and toss anything expired."},
+{date:"March 20",day:"Friday — First Day of Spring",prompt:"☀️ Lakeway: Where do you actually go to stand in the sun in Lakeway? What's your spot?",closer:"Love. Love. Go stand in it.",title:"Browndog Daily | First Day of Spring",desc:"First day of Spring. Stand in the sun. Give someone a flower. Plant something. browndog.com",top:"First day of Spring. Official. It's here.\n\nHey, I'm Vale. This is Browndog Daily.\n\nStand in the sun for five minutes and feel the warmth.\n\nGive someone a flower today.\n\nPlant something."},
+{date:"March 21",day:"Saturday",prompt:"☕ Morning routine: Coffee outside — have you actually done this recently? What happened?",closer:"Love. Love. Go take that outside.",title:"Browndog Daily | Coffee Outside",desc:"Take the coffee outside. Tell someone what you love about this time of year. Make a plan. browndog.com",top:"Spring is official and it's Saturday.\n\nHey, I'm Vale. This is Browndog Daily.\n\nTake your coffee or tea outside this morning.\n\nTell someone what you love about this time of year.\n\nPlan something fun for this weekend and write it down."},
+{date:"March 22",day:"Sunday",prompt:"🛒 Lakeway: What's a local shop or vendor near you that more people should know about?",closer:"Love. Love. Go explore.",title:"Browndog Daily | Go Find One",desc:"There's a farmers market or local shop near you worth discovering. Go find one. browndog.com",top:"Saturday in Spring. Farmers market time.\n\nHey, I'm Vale. This is Browndog Daily.\n\nVisit a farmers market or local shop you haven't tried.\n\nStrike up a conversation with a vendor.\n\nWash your car or clean your front door."},
+{date:"March 23",day:"Monday",prompt:"🏡 Habits: What's a Sunday reset habit you keep meaning to build — and what gets in the way?",closer:"Love. Love. Go open those windows.",title:"Browndog Daily | Open All the Windows",desc:"Open all the windows. Call someone who feels like home. Fill one bag for donation. browndog.com",top:"Sunday reset. Spring cleaning edition.\n\nHey, I'm Vale. This is Browndog Daily.\n\nOpen all the windows for thirty minutes.\n\nCall your parents or someone who feels like a parent to you.\n\nFill one bag with things to donate."},
+{date:"March 24",day:"Tuesday",prompt:"🌱 Building Browndog: What's something about this specific week you're genuinely grateful for?",closer:"Love. Love. Go feel that grass.",title:"Browndog Daily | Bare Feet in Grass",desc:"Walk barefoot in the grass. Write a specific thank-you. Clean out the car. Spring energy. browndog.com",top:"New week. Spring energy.\n\nHey, I'm Vale. This is Browndog Daily.\n\nWalk barefoot in the grass for two minutes.\n\nWrite a thank-you note to someone who helped you recently.\n\nClean out your car."},
+{date:"March 25",day:"Wednesday",prompt:"☕ Habits: What's something small you've been meaning to try that you keep putting off for no real reason?",closer:"Love. Love. Try the weird tea.",title:"Browndog Daily | Try the Weird Tea",desc:"Try the weird tea at the back of the cabinet. Bring something to share. Update the calendar. browndog.com",top:"Tuesday momentum. Keep it going.\n\nHey, I'm Vale. This is Browndog Daily.\n\nTry a new tea or drink you've never had.\n\nBring something to share to work or a neighbor.\n\nUpdate your calendar for the rest of the week."},
+{date:"March 26",day:"Thursday",prompt:"📖 Building Browndog: What's a conversation this month you almost canceled — and what happened?",closer:"Love. Love. Go read something good.",title:"Browndog Daily | Read Something Good",desc:"Read something with no agenda. Ask someone their favorite memory from this month. Check the smoke detector. browndog.com",top:"Mid-week. Almost April.\n\nHey, I'm Vale. This is Browndog Daily.\n\nRead something that has nothing to do with work or news. Fifteen minutes.\n\nAsk someone about their favorite memory from this month.\n\nCheck your smoke detector batteries."},
+{date:"March 27",day:"Friday",prompt:"🍳 Morning routine: When's the last time you cooked something just because it smelled good?",closer:"Love. Love. Go make that kitchen smell like something.",title:"Browndog Daily | Make It Smell Amazing",desc:"Make your kitchen smell amazing tonight. Invite someone over. Tidy up in fifteen minutes. browndog.com",top:"Thursday. The weekend is close enough to smell.\n\nHey, I'm Vale. This is Browndog Daily.\n\nCook something that makes your kitchen smell amazing tonight.\n\nInvite someone over for dinner this weekend.\n\nTidy up your living room in fifteen minutes."},
+{date:"March 28",day:"Saturday",prompt:"✨ Building Browndog: What's your actual favorite moment from March — not the pitch version, the real one?",closer:"Love. Love. Write it down.",title:"Browndog Daily | Your Actual Favorite",desc:"Write down your actual favorite moment from March — not the pitch version. Then share it. browndog.com",top:"Friday. End of the month in sight.\n\nHey, I'm Vale. This is Browndog Daily.\n\nWrite down your favorite moment from March.\n\nShare that moment with someone who was part of it.\n\nPay one bill you've been moving to next week."},
+{date:"March 29",day:"Sunday",prompt:"🧩 Habits: What's something you loved doing as a kid that you've completely stopped — and why?",closer:"Love. Love. Go be a kid.",title:"Browndog Daily | Be a Kid Again",desc:"Do something you loved as a kid. Walk with someone. Change the sheets. March is almost done. browndog.com",top:"Saturday. Take a breath. March has been a lot.\n\nHey, I'm Vale. This is Browndog Daily.\n\nDo something you loved as a kid today.\n\nTake a walk with someone. No agenda.\n\nChange your sheets."},
+{date:"March 30",day:"Monday",prompt:"🤫 Building Browndog: What's the gap between what you tell people Browndog is — and what it actually feels like right now?",closer:"Love. Love.",title:"Browndog Daily | Say the Actual Words",desc:"Sit somewhere quiet for ten minutes. Then say the actual words to someone who needs to hear them. browndog.com",top:"Sunday. Last day before Spring really settles in.\n\nHey, I'm Vale. This is Browndog Daily.\n\nSit somewhere quiet for ten minutes with no phone.\n\nTell someone you love them. Say the actual words today.\n\nWrite down three things you want from April."},
+{date:"March 31",day:"Tuesday — Last Day of March",prompt:"🌉 Building Browndog: You started March saying it was the bridge to Spring. Standing on the other side — what do you actually see?",closer:"Love. Love.",title:"Browndog Daily | You Crossed the Bridge",desc:"You crossed the bridge. Name one thing you're proud of. Thank someone who made March better. browndog.com",top:"Last day of March. You crossed the bridge.\n\nHey, I'm Vale. This is Browndog Daily.\n\nLook back on the month and name one thing you're proud of.\n\nThank someone who made your March better.\n\nSet your top three intentions for April."}
+];
+
+const G=[
+{n:1,title:"Browndog Daily | Good Deed — The Shared Spaghetti Dinner",desc:"There's a neighbor who'd love company for dinner. You could be the one who shows up with pasta. browndog.com/good-deeds-finder",time:"An Hour+",loc:"In My Neighborhood",closer:"Love. Love. Go boil that water.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's project: The Shared Spaghetti Dinner.\\n\\nOffer to make spaghetti dinner with an elderly neighbor. Spend the evening cooking, eating, and connecting together.\\n\\nAn Hour+. In My Neighborhood."},
+{n:2,title:"Browndog Daily | Good Deed — The Memory Lane Tech Session",desc:"Someone has a box of photos they've never turned into stories. Offer an afternoon and a phone. browndog.com/good-deeds-finder",time:"An Hour+",loc:"In My Neighborhood",closer:"Love. Love. Go open that box.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's project: The Memory Lane Tech Session.\\n\\nHelp a senior sort through a box of their photos. Show them how to use the Create a Memory Page tool to preserve a few favorites.\\n\\nAn Hour+. In My Neighborhood."},
+{n:3,title:"Browndog Daily | Good Deed — The Mailbox-to-Doorstep Delivery",desc:"Thirty steps. Two minutes. Means everything to the neighbor who can't make it to the mailbox. browndog.com/good-deeds-finder",time:"5 Minutes",loc:"In My Neighborhood",closer:"Love. Love. Go grab that mail.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's good deed: The Mailbox-to-Doorstep Delivery.\\n\\nOffer to bring in the mail for a neighbor, especially if they have mobility issues.\\n\\n5 Minutes. In My Neighborhood."},
+{n:4,title:"Browndog Daily | Good Deed — The \"Just Because\" Bud Vase",desc:"You're buying flowers anyway. Pull three stems. Put them in a jar. Knock on a door. browndog.com/good-deeds-finder",time:"5 Minutes",loc:"In My Neighborhood",closer:"Love. Love. Go pick those flowers.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's good deed: The \"Just Because\" Bud Vase.\\n\\nWhen you buy flowers, pull a few stems out. Put them in a small jar with a ribbon and surprise a neighbor with them.\\n\\n5 Minutes. In My Neighborhood."},
+{n:5,title:"Browndog Daily | Good Deed — The Smart Speaker Intro",desc:"A senior nearby doesn't know what a smart speaker can do for them. You do. Spend 30 minutes. browndog.com/good-deeds-finder",time:"30 Minutes",loc:"In My Neighborhood",closer:"Love. Love. Go show them the magic.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's good deed: The Smart Speaker Intro.\\n\\nTalk with a senior about smart speakers. Explain how they can help with reminders, calling family, or playing music.\\n\\n30 Minutes. In My Neighborhood."},
+{n:6,title:"Browndog Daily | Good Deed — The Smart Speaker Setup",desc:"A smart speaker sitting in a box, unused. Offer to set it up. Change everything. browndog.com/good-deeds-finder",time:"An Hour+",loc:"In My Neighborhood",closer:"Love. Love. Go plug it in.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's project: The Smart Speaker Setup.\\n\\nOffer to set up a Google or Amazon smart speaker for a neighbor. Help them connect it and teach them a few basic commands.\\n\\nAn Hour+. In My Neighborhood."},
+{n:7,title:"Browndog Daily | Good Deed — The Remote Control Rescue",desc:"Dead batteries in a remote are a small frustration with an easy fix. Go be the fix. browndog.com/good-deeds-finder",time:"5 Minutes",loc:"In My Neighborhood",closer:"Love. Love. Go grab those batteries.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's good deed: The Remote Control Rescue.\\n\\nOffer to replace the batteries in a neighbor's TV remote or other small devices.\\n\\n5 Minutes. In My Neighborhood."},
+{n:8,title:"Browndog Daily | Good Deed — The Neighborhood Stroll",desc:"Invite a neighbor on a slow, no-agenda walk. The conversation might surprise you both. browndog.com/good-deeds-finder",time:"30 Minutes",loc:"In My Neighborhood",closer:"Love. Love. Go take that walk.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's good deed: The Neighborhood Stroll.\\n\\nInvite a neighbor to join you for a short, slow-paced walk down the street.\\n\\n30 Minutes. In My Neighborhood."},
+{n:9,title:"Browndog Daily | Good Deed — The Caregiver's Break",desc:"A caregiver nearby is running on empty. Offer to sit with their person for an hour. Give them a break. browndog.com/good-deeds-finder",time:"An Hour+",loc:"In My Neighborhood",closer:"Love. Love. Go knock on that door.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's project: The Caregiver's Break.\\n\\nOffer to sit with a sick or homebound neighbor for an hour or two. This gives their caregiver a much-needed break to run errands.\\n\\nAn Hour+. In My Neighborhood."},
+{n:10,title:"Browndog Daily | Good Deed — The Quick Store Run",desc:"You're going to the store anyway. Text a neighbor first. browndog.com/good-deeds-finder",time:"30 Minutes",loc:"In My Neighborhood",closer:"Love. Love. Go send that text.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's good deed: The Quick Store Run.\\n\\nWhen you're heading to the store, text a neighbor to see if they need anything.\\n\\n30 Minutes. In My Neighborhood."},
+{n:11,title:"Browndog Daily | Good Deed — The Historical Story Chat",desc:"An older neighbor lived through something worth knowing about. Ask them what they remember. browndog.com/good-deeds-finder",time:"An Hour+",loc:"In My Neighborhood",closer:"Love. Love. Go ask the question.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's project: The Historical Story Chat.\\n\\nSit down with an older neighbor or relative. Ask them about a specific historical event and what they remember.\\n\\nAn Hour+. In My Neighborhood."},
+{n:12,title:"Browndog Daily | Good Deed — The Mail Carrier Refresher",desc:"Your mail carrier does this every day in every kind of weather. Leave a note and a cold drink. browndog.com/good-deeds-finder",time:"5 Minutes",loc:"In My Neighborhood",closer:"Love. Love. Leave it in the box.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's good deed: The Mail Carrier Refresher.\\n\\nWrite a quick thank-you note. On a hot day, leave the note and a cold drink in your mailbox.\\n\\n5 Minutes. In My Neighborhood."},
+{n:13,title:"Browndog Daily | Good Deed — The Digital Compliment",desc:"A local business you love deserves a five-star review. Two minutes. Do it now. browndog.com/good-deeds-finder",time:"5 Minutes",loc:"Online",closer:"Love. Love. Go leave that review.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's good deed: The Digital Compliment.\\n\\nThink of a local business or creator you admire. Leave them a positive review or comment online.\\n\\n5 Minutes. Online."},
+{n:14,title:"Browndog Daily | Good Deed — The Sidewalk Encouragement",desc:"Write something encouraging on the sidewalk. Someone will read it at exactly the right moment. browndog.com/good-deeds-finder",time:"5 Minutes",loc:"In My Neighborhood",closer:"Love. Love. Go write something real.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's good deed: The Sidewalk Encouragement.\\n\\nWrite a positive, encouraging message on the sidewalk for your neighbors to see.\\n\\n5 Minutes. In My Neighborhood."},
+{n:15,title:"Browndog Daily | Good Deed — The Front Porch Newspaper",desc:"Newspaper in the driveway. Walk it to the porch. Thirty seconds of kindness. browndog.com/good-deeds-finder",time:"5 Minutes",loc:"In My Neighborhood",closer:"Love. Love. Go walk it up.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's good deed: The Front Porch Newspaper.\\n\\nIf you see a neighbor's newspaper in their driveway, move it up to their front porch for them.\\n\\n5 Minutes. In My Neighborhood."},
+{n:16,title:"Browndog Daily | Good Deed — The Digital \"Thinking of You\"",desc:"Find a photo of someone you love. Text it to them with no explanation. Watch what happens. browndog.com/good-deeds-finder",time:"5 Minutes",loc:"Online",closer:"Love. Love. Go send that photo.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's good deed: The Digital \"Thinking of You\".\\n\\nFind a great photo of a friend or family member. Text it to them with the message, 'This made me smile today.'\\n\\n5 Minutes. Online."},
+{n:17,title:"Browndog Daily | Good Deed — The Shopping Cart Return",desc:"Return the stray cart. Someone in the next row will be glad you did. browndog.com/good-deeds-finder",time:"5 Minutes",loc:"In My Neighborhood",closer:"Love. Love. Return the cart.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's good deed: The Shopping Cart Return.\\n\\nAt the grocery store, grab a stray shopping cart from the parking lot and return it.\\n\\n5 Minutes. In My Neighborhood."},
+{n:18,title:"Browndog Daily | Good Deed — The Honest Tip Jar",desc:"Leave a real tip and a real smile for the barista. Both matter more than you think. browndog.com/good-deeds-finder",time:"5 Minutes",loc:"In My Neighborhood",closer:"Love. Love. Go leave that tip.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's good deed: The Honest Tip Jar.\\n\\nAt your local coffee shop, leave a tip and a genuine smile for the barista.\\n\\n5 Minutes. In My Neighborhood."},
+{n:19,title:"Browndog Daily | Good Deed — The Trash Can Tidy-Up",desc:"After the garbage truck comes, wheel in your neighbor's bins. They'll notice. browndog.com/good-deeds-finder",time:"5 Minutes",loc:"In My Neighborhood",closer:"Love. Love. Go wheel those in.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's good deed: The Trash Can Tidy-Up.\\n\\nAfter the garbage truck comes, wheel in your neighbor's empty trash and recycling bins from the curb.\\n\\n5 Minutes. In My Neighborhood."},
+{n:20,title:"Browndog Daily | Good Deed — The \"Good Morning\" Wave",desc:"On your morning walk, make eye contact and wave at everyone you pass. See what happens. browndog.com/good-deeds-finder",time:"5 Minutes",loc:"In My Neighborhood",closer:"Love. Love. Go wave at somebody.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's good deed: The \"Good Morning\" Wave.\\n\\nOn your morning walk, make eye contact and give a friendly wave or hello to everyone you pass.\\n\\n5 Minutes. In My Neighborhood."},
+{n:21,title:"Browndog Daily | Good Deed — The Donation Jar Drop",desc:"Drop your spare change in the donation jar at checkout. Easiest good deed on the list. browndog.com/good-deeds-finder",time:"5 Minutes",loc:"In My Neighborhood",closer:"Love. Love. Drop the change.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's good deed: The Donation Jar Drop.\\n\\nDrop your spare change into a donation box at a checkout counter.\\n\\n5 Minutes. In My Neighborhood."},
+{n:22,title:"Browndog Daily | Good Deed — The Tidy-Up Walk",desc:"Walk your block with a bag. Pick up what you find. Leave it cleaner than you found it. browndog.com/good-deeds-finder",time:"30 Minutes",loc:"In My Neighborhood",closer:"Love. Love. Go pick it up.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's good deed: The Tidy-Up Walk.\\n\\nGo for a walk around your block. Pick up any litter you see along the way.\\n\\n30 Minutes. In My Neighborhood."},
+{n:23,title:"Browndog Daily | Good Deed — The Recipe Share",desc:"Write down a recipe with the story behind it. Share both with someone who would love them. browndog.com/good-deeds-finder",time:"30 Minutes",loc:"At Home",closer:"Love. Love. Go write it down.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's good deed: The Recipe Share.\\n\\nWrite down a favorite recipe. Share it with a friend or neighbor, with a story about why it matters to you.\\n\\n30 Minutes. At Home."},
+{n:24,title:"Browndog Daily | Good Deed — The Little Library Refresh",desc:"Someone nearby is looking for their next good read. Go stock the Little Library. browndog.com/good-deeds-finder",time:"30 Minutes",loc:"In My Neighborhood",closer:"Love. Love. Go stock that library.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's good deed: The Little Library Refresh.\\n\\nGo through your bookshelf and find a few books to donate. Drop them off at a local Little Free Library.\\n\\n30 Minutes. In My Neighborhood."},
+{n:25,title:"Browndog Daily | Good Deed — The Pet Water Stop",desc:"On a warm day, a bowl of water by your driveway is everything to a passing dog. browndog.com/good-deeds-finder",time:"30 Minutes",loc:"In My Neighborhood",closer:"Love. Love. Fill that bowl.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's good deed: The Pet Water Stop.\\n\\nOn a warm day, leave a bowl of fresh water by your driveway for passing dogs to have a drink.\\n\\n30 Minutes. In My Neighborhood."},
+{n:26,title:"Browndog Daily | Good Deed — The \"Just Because\" Call",desc:"Call someone you haven't spoken to in too long. No reason needed. Just call. browndog.com/good-deeds-finder",time:"30 Minutes",loc:"At Home",closer:"Love. Love. Go make that call.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's good deed: The \"Just Because\" Call.\\n\\nCall a parent, grandparent, or old friend you haven't spoken to in a while, just to say hi.\\n\\n30 Minutes. At Home."},
+{n:27,title:"Browndog Daily | Good Deed — The Positive Post-It Note",desc:"Write something kind on a sticky note. Leave it somewhere a stranger will find it today. browndog.com/good-deeds-finder",time:"30 Minutes",loc:"At Home",closer:"Love. Love. Go leave one.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's good deed: The Positive Post-It Note.\\n\\nWrite a few positive messages on sticky notes. Leave them in public places for strangers to find.\\n\\n30 Minutes. At Home."},
+{n:28,title:"Browndog Daily | Good Deed — The Bird Feeder Fill-Up",desc:"Clean the bird feeder. Fill it up. Then watch what happens to your yard. browndog.com/good-deeds-finder",time:"30 Minutes",loc:"At Home",closer:"Love. Love. Go fill it up.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's good deed: The Bird Feeder Fill-Up.\\n\\nClean and refill a bird feeder in your yard.\\n\\n30 Minutes. At Home."},
+{n:29,title:"Browndog Daily | Good Deed — The Community Fridge Drop-Off",desc:"Someone in your neighborhood is hungry today. Find the community fridge and bring something. browndog.com/good-deeds-finder",time:"30 Minutes",loc:"In My Neighborhood",closer:"Love. Love. Go drop something off.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's good deed: The Community Fridge Drop-Off.\\n\\nFind a local community fridge or pantry. Drop off a few items to help those in need.\\n\\n30 Minutes. In My Neighborhood."},
+{n:30,title:"Browndog Daily | Good Deed — The Surprise Muffin Drop",desc:"Nobody ever opened their door to muffins and felt worse about their day. Just saying. browndog.com/good-deeds-finder",time:"30 Minutes",loc:"In My Neighborhood",closer:"Love. Love. Go knock on that door.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's good deed: The Surprise Muffin Drop.\\n\\nBuy or bake an extra treat. Leave it on a neighbor's doorstep with a friendly note.\\n\\n30 Minutes. In My Neighborhood."},
+{n:31,title:"Browndog Daily | Good Deed — The Online Recommendation",desc:"Someone you worked with deserves a public word of praise. Write it. Send it. browndog.com/good-deeds-finder",time:"30 Minutes",loc:"Online",closer:"Love. Love. Go write that recommendation.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's good deed: The Online Recommendation.\\n\\nWrite a genuine recommendation for a colleague on LinkedIn. Or email a manager to praise a helpful employee.\\n\\n30 Minutes. Online."},
+{n:32,title:"Browndog Daily | Good Deed — The Scrapbook Hour",desc:"One hour, a box of photos, and the Memory Page tool. Turn memories into something printable. browndog.com/good-deeds-finder",time:"An Hour+",loc:"At Home",closer:"Love. Love. Go open that box.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's project: The Scrapbook Hour.\\n\\nDedicate one hour to organizing a small collection of photos. Use the Create a Memory Page tool to print a few stories.\\n\\nAn Hour+. At Home."},
+{n:33,title:"Browndog Daily | Good Deed — The Volunteer Research Session",desc:"Spend an hour finding a cause worth your time. Then sign up. browndog.com/good-deeds-finder",time:"An Hour+",loc:"At Home",closer:"Love. Love. Go find your cause.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's project: The Volunteer Research Session.\\n\\nSpend an hour researching local charities or nonprofits. Find one that aligns with your values and sign up.\\n\\nAn Hour+. At Home."},
+{n:34,title:"Browndog Daily | Good Deed — The Weekend Bake-a-Thon",desc:"Bake something. Package it up. Deliver it to your local fire station or library. browndog.com/good-deeds-finder",time:"An Hour+",loc:"At Home",closer:"Love. Love. Go bake something.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's project: The Weekend Bake-a-Thon.\\n\\nSpend a weekend afternoon baking a large batch of cookies or brownies. Deliver them to your local fire station or library.\\n\\nAn Hour+. At Home."},
+{n:35,title:"Browndog Daily | Good Deed — The Park Bench Clean-Up",desc:"Your local park has a bench that needs wiping and litter that needs picking. One hour. browndog.com/good-deeds-finder",time:"An Hour+",loc:"In My Neighborhood",closer:"Love. Love. Go clean it up.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's project: The Park Bench Clean-Up.\\n\\nFind a local park or public space. Spend an hour wiping down benches, picking up trash, and making it more beautiful.\\n\\nAn Hour+. In My Neighborhood."},
+{n:36,title:"Browndog Daily | Good Deed — The Family Photo Scan",desc:"Those old family photos are one flood away from gone. Spend an hour backing them up. browndog.com/good-deeds-finder",time:"An Hour+",loc:"At Home",closer:"Love. Love. Go scan those photos.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's project: The Family Photo Scan.\\n\\nGo through a box of old family photos. Spend an hour photographing your favorites to create a digital backup.\\n\\nAn Hour+. At Home."},
+{n:37,title:"Browndog Daily | Good Deed — The \"Get to Know You\" Interview",desc:"Sit down with a parent or grandparent and record an hour of their stories. You won't regret it. browndog.com/good-deeds-finder",time:"An Hour+",loc:"At Home",closer:"Love. Love. Go ask the question.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's project: The \"Get to Know You\" Interview.\\n\\nSit down with a parent or grandparent. Spend an hour asking them questions about their life and recording their stories.\\n\\nAn Hour+. At Home."},
+{n:38,title:"Browndog Daily | Good Deed — The Community Garden Weeding",desc:"Your local community garden has weeds that won't pull themselves. Spend an hour helping. browndog.com/good-deeds-finder",time:"An Hour+",loc:"In My Neighborhood",closer:"Love. Love. Go pull a weed.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's project: The Community Garden Weeding.\\n\\nFind a local community garden. Spend an hour helping to pull weeds or water plants.\\n\\nAn Hour+. In My Neighborhood."},
+{n:39,title:"Browndog Daily | Good Deed — The Online Course Taster",desc:"There's something you've been curious about. Find a free course. Spend an hour. browndog.com/good-deeds-finder",time:"An Hour+",loc:"Online",closer:"Love. Love. Go learn something.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's project: The Online Course Taster.\\n\\nFind a free online course on a topic you're curious about. Spend an hour learning something new.\\n\\nAn Hour+. Online."},
+{n:40,title:"Browndog Daily | Good Deed — The Letters to Seniors",desc:"There's a lonely senior somewhere waiting for a letter. Write one today. browndog.com/good-deeds-finder",time:"An Hour+",loc:"At Home",closer:"Love. Love. Go write that letter.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's project: The Letters to Seniors.\\n\\nFind an organization that facilitates writing letters to lonely seniors. Spend an hour writing a few thoughtful, handwritten notes.\\n\\nAn Hour+. At Home."},
+{n:41,title:"Browndog Daily | Good Deed — The Forgotten Toy Clean-Up",desc:"Go through the old toys. Fill one box. Donate it. Make room for something new. browndog.com/good-deeds-finder",time:"30 Minutes",loc:"At Home",closer:"Love. Love. Go fill that box.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's good deed: The Forgotten Toy Clean-Up.\\n\\nGo through old toys with your kids. Fill one box to donate to a local charity.\\n\\n30 Minutes. At Home."},
+{n:42,title:"Browndog Daily | Good Deed — The Car Blinker Signal",desc:"Use your blinker. Every time. It takes nothing and makes the road better for everyone. browndog.com/good-deeds-finder",time:"5 Minutes",loc:"In My Neighborhood",closer:"Love. Love. Use the blinker.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's good deed: The Car Blinker Signal.\\n\\nMake a conscious effort to use your turn signal for every turn, making the road safer for everyone.\\n\\n5 Minutes. In My Neighborhood."},
+{n:43,title:"Browndog Daily | Good Deed — The Elevator Hold",desc:"See someone walking toward the elevator? Hold the door. Takes two seconds. browndog.com/good-deeds-finder",time:"5 Minutes",loc:"In My Neighborhood",closer:"Love. Love. Hold the door.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's good deed: The Elevator Hold.\\n\\nSee someone walking towards the elevator? Hold the door for them.\\n\\n5 Minutes. In My Neighborhood."},
+{n:44,title:"Browndog Daily | Good Deed — The Thank You Email",desc:"There's a teacher or mentor who changed your trajectory. Email them today. browndog.com/good-deeds-finder",time:"5 Minutes",loc:"Online",closer:"Love. Love. Go send that email.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's good deed: The Thank You Email.\\n\\nSend a quick email to a teacher, mentor, or former boss who made a difference in your life.\\n\\n5 Minutes. Online."},
+{n:45,title:"Browndog Daily | Good Deed — The \"Let Them Merge\"",desc:"Let them merge. Wave them in. Watch how good it feels to be generous on the road. browndog.com/good-deeds-finder",time:"5 Minutes",loc:"In My Neighborhood",closer:"Love. Love. Wave them in.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's good deed: The \"Let Them Merge\".\\n\\nIn traffic, let another car merge in front of you with a friendly wave.\\n\\n5 Minutes. In My Neighborhood."},
+{n:46,title:"Browndog Daily | Good Deed — The Podcast Share",desc:"You heard a podcast that made you think of someone. Text them the link right now. browndog.com/good-deeds-finder",time:"5 Minutes",loc:"Online",closer:"Love. Love. Go share that episode.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's good deed: The Podcast Share.\\n\\nThink of a podcast episode you loved. Share it with a friend you think would also enjoy it.\\n\\n5 Minutes. Online."},
+{n:47,title:"Browndog Daily | Good Deed — The Dog Poop Pick-Up (Extra)",desc:"You have a bag. You saw the mess. You know what to do. browndog.com/good-deeds-finder",time:"5 Minutes",loc:"In My Neighborhood",closer:"Love. Love. You know what to do.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's good deed: The Dog Poop Pick-Up (Extra).\\n\\nSee an abandoned dog mess on your walk? If you have a spare bag, pick it up.\\n\\n5 Minutes. In My Neighborhood."},
+{n:48,title:"Browndog Daily | Good Deed — The Office Coffee Refill",desc:"You finished the coffee at work. Brew a fresh pot. Be the person everyone secretly loves. browndog.com/good-deeds-finder",time:"5 Minutes",loc:"In My Neighborhood",closer:"Love. Love. Go brew that pot.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's good deed: The Office Coffee Refill.\\n\\nFinished the pot of coffee at work? Brew a fresh one for the next person.\\n\\n5 Minutes. In My Neighborhood."},
+{n:49,title:"Browndog Daily | Good Deed — The YouTube Skill Share",desc:"Learn one thing from YouTube. Teach it to someone in your house. Both of you win. browndog.com/good-deeds-finder",time:"30 Minutes",loc:"At Home",closer:"Love. Love. Go teach it.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's good deed: The YouTube Skill Share.\\n\\nLearn how to do one simple thing from a YouTube tutorial. Teach it to a family member.\\n\\n30 Minutes. At Home."},
+{n:50,title:"Browndog Daily | Good Deed — The Library Bookmark Surprise",desc:"Make a cheerful bookmark. Tuck it into a library book. Leave something for the next reader. browndog.com/good-deeds-finder",time:"30 Minutes",loc:"In My Neighborhood",closer:"Love. Love. Go tuck it in.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's good deed: The Library Bookmark Surprise.\\n\\nCreate a small, cheerful bookmark. Leave it inside a book at your local library for the next reader to find.\\n\\n30 Minutes. In My Neighborhood."},
+{n:51,title:"Browndog Daily | Good Deed — The Clothing Donation Prep",desc:"One hour in the closet. One bag out the door. Someone else needs what you're not wearing. browndog.com/good-deeds-finder",time:"An Hour+",loc:"At Home",closer:"Love. Love. Fill that bag.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's project: The Clothing Donation Prep.\\n\\nGo through your closet for one hour. Fill one bag with clothes you no longer wear to donate.\\n\\nAn Hour+. At Home."},
+{n:52,title:"Browndog Daily | Good Deed — The Neighbor's Dog Walk",desc:"An elderly neighbor's dog needs a walk. You need a walk. This solves two problems. browndog.com/good-deeds-finder",time:"An Hour+",loc:"In My Neighborhood",closer:"Love. Love. Go get the leash.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's project: The Neighbor's Dog Walk.\\n\\nOffer to walk an elderly neighbor's dog for them one afternoon.\\n\\nAn Hour+. In My Neighborhood."},
+{n:53,title:"Browndog Daily | Good Deed — The Family Recipe Binder",desc:"Print five family recipes, add the stories, put them in a binder. That's a cookbook. browndog.com/good-deeds-finder",time:"An Hour+",loc:"At Home",closer:"Love. Love. Go make that binder.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's project: The Family Recipe Binder.\\n\\nUse the Create a Memory Page tool to print out 5-10 family recipes. Organize them in a binder to create a family cookbook.\\n\\nAn Hour+. At Home."},
+{n:54,title:"Browndog Daily | Good Deed — The Community Meeting Attendee",desc:"Your next neighborhood meeting is coming up. Show up. Find out what's happening on your street. browndog.com/good-deeds-finder",time:"An Hour+",loc:"In My Neighborhood",closer:"Love. Love. Go show up.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's project: The Community Meeting Attendee.\\n\\nFind out when your next local town hall or community meeting is. Attend to learn more about what's happening.\\n\\nAn Hour+. In My Neighborhood."},
+{n:55,title:"Browndog Daily | Good Deed — The Language Learning Sprint",desc:"One hour. One new language. It's further than you think. browndog.com/good-deeds-finder",time:"An Hour+",loc:"At Home",closer:"Love. Love. Open that app.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's project: The Language Learning Sprint.\\n\\nSpend one hour starting to learn a new language using an app like Duolingo.\\n\\nAn Hour+. At Home."},
+{n:56,title:"Browndog Daily | Good Deed — The \"How Can I Help?\" Text",desc:"Don't say 'let me know if you need anything.' Ask: 'How can I help you this week?' browndog.com/good-deeds-finder",time:"5 Minutes",loc:"Online",closer:"Love. Love. Go send that text.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's good deed: The \"How Can I Help?\" Text.\\n\\nText a friend going through a tough time. Instead of 'Let me know if you need anything,' ask 'How can I help you this week?'\\n\\n5 Minutes. Online."},
+{n:57,title:"Browndog Daily | Good Deed — The Found Coin Placement",desc:"Found a penny? Put it on a park bench or playground slide. Let a kid find it. browndog.com/good-deeds-finder",time:"5 Minutes",loc:"In My Neighborhood",closer:"Love. Love. Leave it heads up.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's good deed: The Found Coin Placement.\\n\\nFind a penny on the ground? Place it on a park bench or playground slide for a child to find.\\n\\n5 Minutes. In My Neighborhood."},
+{n:58,title:"Browndog Daily | Good Deed — The Compliment a Stranger",desc:"Give a genuine compliment to a stranger today. Something specific you actually noticed. browndog.com/good-deeds-finder",time:"5 Minutes",loc:"In My Neighborhood",closer:"Love. Love. Go say it.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's good deed: The Compliment a Stranger.\\n\\nGive a genuine compliment to a stranger — something you genuinely admire.\\n\\n5 Minutes. In My Neighborhood."},
+{n:59,title:"Browndog Daily | Good Deed — The Water Bill Round-Up",desc:"Round up your utility bill to help a neighbor in need. Takes 30 seconds to sign up. browndog.com/good-deeds-finder",time:"5 Minutes",loc:"At Home",closer:"Love. Love. Go sign up.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's good deed: The Water Bill Round-Up.\\n\\nMany utility companies let you round up your bill to help others in need. Sign up for it.\\n\\n5 Minutes. At Home."},
+{n:60,title:"Browndog Daily | Good Deed — The Social Media Kindness",desc:"Thirty minutes. Only encouraging comments. See how it changes your own mood. browndog.com/good-deeds-finder",time:"30 Minutes",loc:"Online",closer:"Love. Love. Go leave a comment.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's good deed: The Social Media Kindness.\\n\\nSpend 30 minutes leaving only positive, encouraging comments on your friends' posts.\\n\\n30 Minutes. Online."},
+{n:61,title:"Browndog Daily | Good Deed — The Pantry First-In, First-Out",desc:"Move the older cans to the front. It takes five minutes and wastes nothing. browndog.com/good-deeds-finder",time:"30 Minutes",loc:"At Home",closer:"Love. Love. Move those cans.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's good deed: The Pantry First-In, First-Out.\\n\\nOrganize one shelf of your pantry, moving older items to the front so they get used first.\\n\\n30 Minutes. At Home."},
+{n:62,title:"Browndog Daily | Good Deed — The Blood Donation Sign-Up",desc:"Sign up for a blood drive today. Thirty minutes of your time. Potentially a life. browndog.com/good-deeds-finder",time:"30 Minutes",loc:"At Home",closer:"Love. Love. Go sign up.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's good deed: The Blood Donation Sign-Up.\\n\\nGo to the Red Cross website. Find a local blood drive and sign up for an appointment.\\n\\n30 Minutes. At Home."},
+{n:63,title:"Browndog Daily | Good Deed — The Local Park Review",desc:"Leave a five-star review for a local park you love. Help others find it. browndog.com/good-deeds-finder",time:"30 Minutes",loc:"Online",closer:"Love. Love. Go leave that review.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's good deed: The Local Park Review.\\n\\nVisit a local park. Leave a positive review with a nice photo on Google Maps to encourage others to visit.\\n\\n30 Minutes. Online."},
+{n:64,title:"Browndog Daily | Good Deed — The \"Just Because\" Flowers",desc:"Buy a small bouquet. Give it to an elderly neighbor or a librarian who deserves one. browndog.com/good-deeds-finder",time:"An Hour+",loc:"In My Neighborhood",closer:"Love. Love. Go hand them over.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's project: The \"Just Because\" Flowers.\\n\\nBuy a small bouquet of flowers. Give them to an elderly neighbor or a community helper like a librarian.\\n\\nAn Hour+. In My Neighborhood."},
+{n:65,title:"Browndog Daily | Good Deed — The Free Online Tutoring",desc:"You know something a student needs to know. One hour a week. Sign up to teach. browndog.com/good-deeds-finder",time:"An Hour+",loc:"Online",closer:"Love. Love. Go sign up.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's project: The Free Online Tutoring.\\n\\nFind a platform that offers free tutoring for students. Sign up to volunteer for one hour a week.\\n\\nAn Hour+. Online."},
+{n:66,title:"Browndog Daily | Good Deed — The Neighborhood Watch Starter",desc:"Talk to three neighbors about starting a simple block group. It starts with one conversation. browndog.com/good-deeds-finder",time:"An Hour+",loc:"In My Neighborhood",closer:"Love. Love. Go have that conversation.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's project: The Neighborhood Watch Starter.\\n\\nTalk to a few neighbors about starting a simple neighborhood watch or communication group.\\n\\nAn Hour+. In My Neighborhood."},
+{n:67,title:"Browndog Daily | Good Deed — The \"Adopt a Grandparent\" Program",desc:"There's a senior in a nearby facility who would love a regular visitor. Sign up to be one. browndog.com/good-deeds-finder",time:"An Hour+",loc:"In My Neighborhood",closer:"Love. Love. Go sign up.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's project: The \"Adopt a Grandparent\" Program.\\n\\nResearch local Adopt a Grandparent programs run by nursing homes or senior centers. Sign up to be a companion.\\n\\nAn Hour+. In My Neighborhood."},
+{n:68,title:"Browndog Daily | Good Deed — The Emergency Contact Update",desc:"Check your emergency contact info right now. Make sure it's someone who'd actually pick up. browndog.com/good-deeds-finder",time:"5 Minutes",loc:"At Home",closer:"Love. Love. Go update it now.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's good deed: The Emergency Contact Update.\\n\\nCheck the emergency contact information in your phone. Make sure it's up to date.\\n\\n5 Minutes. At Home."},
+{n:69,title:"Browndog Daily | Good Deed — The Voicemail Message",desc:"Leave a short, cheerful voicemail for someone you love. Just to say you're thinking of them. browndog.com/good-deeds-finder",time:"5 Minutes",loc:"At Home",closer:"Love. Love. Go leave that message.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's good deed: The Voicemail Message.\\n\\nLeave a short, cheerful voicemail for a loved one, just to say you're thinking of them.\\n\\n5 Minutes. At Home."},
+{n:70,title:"Browndog Daily | Good Deed — The Junk Mail Tidy",desc:"Help an elderly neighbor sort their mail. Separate the junk from what actually matters. browndog.com/good-deeds-finder",time:"5 Minutes",loc:"At Home",closer:"Love. Love. Go sort that stack.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's good deed: The Junk Mail Tidy.\\n\\nOffer to sort through an elderly parent or neighbor's mail, separating junk from important letters.\\n\\n5 Minutes. At Home."},
+{n:71,title:"Browndog Daily | Good Deed — The Shared Article",desc:"Read something good? Share it. One person. One note about why you thought of them. browndog.com/good-deeds-finder",time:"5 Minutes",loc:"Online",closer:"Love. Love. Go share it.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's good deed: The Shared Article.\\n\\nRead an interesting article? Share it with one person you think would appreciate it, with a note about why.\\n\\n5 Minutes. Online."},
+{n:72,title:"Browndog Daily | Good Deed — The Plant Watering Offer",desc:"The porch plants on your neighbor's steps look thirsty. Offer to water them. browndog.com/good-deeds-finder",time:"30 Minutes",loc:"In My Neighborhood",closer:"Love. Love. Go water those plants.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's good deed: The Plant Watering Offer.\\n\\nSee a neighbor's thirsty-looking porch plants? Offer to water them.\\n\\n30 Minutes. In My Neighborhood."},
+{n:73,title:"Browndog Daily | Good Deed — The Lost Pet Search Party",desc:"You saw the Lost Pet sign. Spend 30 minutes of your walk actually looking. browndog.com/good-deeds-finder",time:"30 Minutes",loc:"In My Neighborhood",closer:"Love. Love. Go look for that pet.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's good deed: The Lost Pet Search Party.\\n\\nSee a Lost Pet sign? Spend 30 minutes of your walk actively looking for the pet.\\n\\n30 Minutes. In My Neighborhood."},
+{n:74,title:"Browndog Daily | Good Deed — The Car Tire Check",desc:"Check the tire pressure on your car and someone else's. Safer roads start at home. browndog.com/good-deeds-finder",time:"30 Minutes",loc:"At Home",closer:"Love. Love. Go check those tires.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's good deed: The Car Tire Check.\\n\\nCheck the tire pressure on your car and your spouse's or parent's car. Properly inflated tires are safer.\\n\\n30 Minutes. At Home."},
+{n:75,title:"Browndog Daily | Good Deed — The Holiday Decoration Helper",desc:"Offer to help an older neighbor with their holiday decorations. The ladder part especially. browndog.com/good-deeds-finder",time:"An Hour+",loc:"In My Neighborhood",closer:"Love. Love. Go offer to help.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's project: The Holiday Decoration Helper.\\n\\nOffer to help an older neighbor put up or take down their holiday decorations.\\n\\nAn Hour+. In My Neighborhood."},
+{n:76,title:"Browndog Daily | Good Deed — The Community Skill Share",desc:"You know how to do something someone else wants to learn. Organize one afternoon to share it. browndog.com/good-deeds-finder",time:"An Hour+",loc:"In My Neighborhood",closer:"Love. Love. Go share what you know.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's project: The Community Skill Share.\\n\\nOrganize a small skill-sharing event at your local library — something you know how to do well.\\n\\nAn Hour+. In My Neighborhood."},
+{n:77,title:"Browndog Daily | Good Deed — The Emergency Prep Kit",desc:"Build a simple emergency kit for your home. Make a smaller one for an elderly family member. browndog.com/good-deeds-finder",time:"An Hour+",loc:"At Home",closer:"Love. Love. Go build that kit.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's project: The Emergency Prep Kit.\\n\\nCreate a simple emergency preparedness kit for your home. Make a smaller one for an elderly family member.\\n\\nAn Hour+. At Home."},
+{n:78,title:"Browndog Daily | Good Deed — The Local History Project",desc:"Spend an afternoon learning the history of your street. You'll never see it the same way. browndog.com/good-deeds-finder",time:"An Hour+",loc:"In My Neighborhood",closer:"Love. Love. Go discover something.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's project: The Local History Project.\\n\\nSpend an afternoon at the local library researching the history of your town or neighborhood.\\n\\nAn Hour+. In My Neighborhood."},
+{n:79,title:"Browndog Daily | Good Deed — The Digital Photo Frame Setup",desc:"A digital photo frame loaded with family faces is the best gift a grandparent can get. Set one up. browndog.com/good-deeds-finder",time:"An Hour+",loc:"In My Neighborhood",closer:"Love. Love. Go set it up.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's project: The Digital Photo Frame Setup.\\n\\nGift a digital photo frame to a grandparent. Spend an hour setting it up and loading it with family pictures.\\n\\nAn Hour+. In My Neighborhood."},
+{n:80,title:"Browndog Daily | Good Deed — The \"Unsubscribe\" Spree",desc:"Spend 30 minutes unsubscribing from everything you don't read. A gift to your future self. browndog.com/good-deeds-finder",time:"30 Minutes",loc:"At Home",closer:"Love. Love. Unsubscribe from all of it.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's good deed: The \"Unsubscribe\" Spree.\\n\\nSpend 30 minutes unsubscribing from all the marketing emails you no longer read. A gift to your future self.\\n\\n30 Minutes. At Home."},
+{n:81,title:"Browndog Daily | Good Deed — The Podcast Recommendation",desc:"You heard something good. Text it to one person right now. That's the whole deed. browndog.com/good-deeds-finder",time:"5 Minutes",loc:"Online",closer:"Love. Love. Go share that link.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's good deed: The Podcast Recommendation.\\n\\nText a friend: 'I just listened to this podcast and thought of you.'\\n\\n5 Minutes. Online."},
+{n:82,title:"Browndog Daily | Good Deed — The Extra Grocery Bag",desc:"Buy a few extra non-perishables. Drop them in the donation bin on your way out. browndog.com/good-deeds-finder",time:"30 Minutes",loc:"In My Neighborhood",closer:"Love. Love. Grab the extra bag.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's good deed: The Extra Grocery Bag.\\n\\nWhen you go shopping, buy a few extra non-perishable items. Drop them in the donation bin on your way out.\\n\\n30 Minutes. In My Neighborhood."},
+{n:83,title:"Browndog Daily | Good Deed — The Patio & Porch Polish",desc:"Grab a friend. Offer to sweep a neighbor's porch. Make it look like someone cares — because you do. browndog.com/good-deeds-finder",time:"An Hour+",loc:"In My Neighborhood",closer:"Love. Love. Go grab a broom.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's project: The Patio & Porch Polish.\\n\\nGather a friend and offer to sweep or clean off a neighbor's patio or front porch.\\n\\nAn Hour+. In My Neighborhood."},
+{n:84,title:"Browndog Daily | Good Deed — Soup & Sourdough Delivery",desc:"Text a neighbor about soup. Drop it off with fresh bread and the recipe. That's a whole evening. browndog.com/good-deeds-finder",time:"30 Minutes",loc:"In My Neighborhood",closer:"Love. Love. Go make that delivery.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's good deed: Soup & Sourdough Delivery.\\n\\nText a neighbor about your favorite soup. Ask to drop some off with fresh bread and include the recipe.\\n\\n30 Minutes. In My Neighborhood."},
+{n:85,title:"Browndog Daily | Good Deed — The Library Outing",desc:"Find a library program. Offer to drive a neighbor who can't get there alone. browndog.com/good-deeds-finder",time:"An Hour+",loc:"In My Neighborhood",closer:"Love. Love. Go offer to drive.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's project: The Library Outing.\\n\\nFind a music or library program. Offer to drive a friend or senior neighbor and provide timing details.\\n\\nAn Hour+. In My Neighborhood."},
+{n:86,title:"Browndog Daily | Good Deed — The Sunset Social",desc:"Find a scenic spot. Invite people. Bring snacks. Let seniors and neighbors meet each other. browndog.com/good-deeds-finder",time:"An Hour+",loc:"In My Neighborhood",closer:"Love. Love. Go find that spot.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's project: The Sunset Social.\\n\\nFind a scenic spot. Invite friends to bring senior neighbors for a sunset snack or lunch gathering.\\n\\nAn Hour+. In My Neighborhood."},
+{n:87,title:"Browndog Daily | Good Deed — Sports Team Service Challenge",desc:"Get your team to commit — one senior helped this weekend, each person. Make it a pact. browndog.com/good-deeds-finder",time:"An Hour+",loc:"In My Neighborhood",closer:"Love. Love. Go make the pact.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's project: Sports Team Service Challenge.\\n\\nGet your team to make a pact — everyone helps at least one senior with a project over the weekend.\\n\\nAn Hour+. In My Neighborhood."},
+{n:88,title:"Browndog Daily | Good Deed — The Bingo Buddy",desc:"Find a local Bingo night. Invite a neighbor. Or just go help the organizers run it. browndog.com/good-deeds-finder",time:"An Hour+",loc:"In My Neighborhood",closer:"Love. Love. Go find that Bingo night.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's project: The Bingo Buddy.\\n\\nFind a local Bingo event. Ask a neighbor to go with you or offer to help the organizers.\\n\\nAn Hour+. In My Neighborhood."},
+{n:89,title:"Browndog Daily | Good Deed — The Memory Page Drop-Off",desc:"Print a Memory Page. Drop it off in person. Show them how it works. Make sure the printer runs. browndog.com/good-deeds-finder",time:"30 Minutes",loc:"In My Neighborhood",closer:"Love. Love. Go print that page.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's good deed: The Memory Page Drop-Off.\\n\\nDrop off a custom Memory Page in person. Show them how to use it and make sure their printer is working.\\n\\n30 Minutes. In My Neighborhood."},
+{n:90,title:"Browndog Daily | Good Deed — The Community Skill Share (Digital)",desc:"Pick a digital skill. Call your library. Teach a one-hour pop-up session for neighbors. browndog.com/good-deeds-finder",time:"An Hour+",loc:"In My Neighborhood",closer:"Love. Love. Call the library.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's project: The Community Skill Share (Digital).\\n\\nPick a digital skill you know. Contact your local library to organize a one-hour pop-up teaching session for neighbors.\\n\\nAn Hour+. In My Neighborhood."},
+{n:91,title:"Browndog Daily | Good Deed — The Extra Grocery Bag (Food Bank)",desc:"Grab a few extra items at the store. Drop them in the food bank bin on your way out. browndog.com/good-deeds-finder",time:"30 Minutes",loc:"In My Neighborhood",closer:"Love. Love. Grab the extra bag.",script:"Today from the Good Deeds Finder.\\n\\nHey, I'm Vale. This is Browndog Daily.\\n\\nToday's good deed: The Extra Grocery Bag (Food Bank).\\n\\nWhen you're at the store, grab a few extra non-perishable items for the local food bank donation bin.\\n\\n30 Minutes. In My Neighborhood."}
+];
+
+let di=9,gi=0,dM={};
+
+function switchTab(t){
+  document.getElementById('panel-daily').style.display=t==='daily'?'block':'none';
+  document.getElementById('panel-deeds').style.display=t==='deeds'?'block':'none';
+  document.getElementById('tab-daily').classList.toggle('active',t==='daily');
+  document.getElementById('tab-deeds').classList.toggle('active',t==='deeds');
+}
+
+function init(){
+  const ds=document.getElementById('dsel');
+  D.forEach((e,i)=>{const o=document.createElement('option');o.value=i;o.textContent=e.date+' — '+e.day;ds.appendChild(o);});
+  ds.value=di;
+  const gs=document.getElementById('gsel');
+  G.forEach((d,i)=>{const o=document.createElement('option');o.value=i;o.textContent='#'+d.n+' — '+d.title.replace('Browndog Daily | Good Deed — ','');gs.appendChild(o);});
+  gs.value=gi;
+  loadD(di); loadG(gi);
+}
+
+function loadD(i){
+  di=parseInt(i);
+  document.getElementById('dsel').value=i;
+  const e=D[di];
+  document.getElementById('d-prompt').textContent=e.prompt;
+  document.getElementById('d-closer').textContent=e.closer;
+  document.getElementById('d-title').textContent=e.title;
+  document.getElementById('d-desc').textContent=e.desc;
+  document.getElementById('d-moment').value=dM[di]||'';
+  updD();
+  showRedoIfText();
+}
+
+function loadG(i){
+  gi=parseInt(i);
+  document.getElementById('gsel').value=i;
+  const d=G[gi];
+  document.getElementById('g-closer').textContent=d.closer;
+  document.getElementById('g-title').textContent=d.title;
+  document.getElementById('g-desc').textContent=d.desc;
+  let html='';
+  d.script.split('\n').forEach(l=>{
+    if(l.startsWith("Hey, I'm Vale"))html+=`<span class="wlc">${x(l)}</span>\n`;
+    else html+=x(l)+'\n';
+  });
+  document.getElementById('g-script').innerHTML=html;
+  document.getElementById('g-meta').innerHTML=`<span class="dtag">⏱ ${d.time}</span><span class="dtag">📍 ${d.loc}</span>`;
+}
+
+function updD(){
+  const e=D[di],m=document.getElementById('d-moment').value.trim();
+  dM[di]=m;
+  let html='';
+  e.top.split('\n').forEach(l=>{
+    if(l.startsWith("Hey, I'm Vale"))html+=`<span class="wlc">${x(l)}</span>\n`;
+    else html+=x(l)+'\n';
+  });
+  html+='\n';
+  if(m){html+=`<span class="mok">${x(m)}</span>`;document.getElementById('d-dot').className='sdot ready';}
+  else{html+=`<span class="mph">[ ✏️ type your moment above ]</span>`;document.getElementById('d-dot').className='sdot';}
+  html+=`\n\n<span class="clsr">${x(e.closer)}</span>`;
+  document.getElementById('d-script').innerHTML=html;
+}
+
+function chg(dir,w){
+  if(w==='daily'){const n=di+dir;if(n>=0&&n<D.length)loadD(n);}
+  else{const n=gi+dir;if(n>=0&&n<G.length)loadG(n);}
+}
+
+function cpf(vid,bid,lbl){
+  navigator.clipboard.writeText(document.getElementById(vid).textContent).then(()=>{
+    const b=document.getElementById(bid);
+    b.textContent='✓ Copied!';b.classList.add('copied');
+    setTimeout(()=>{b.innerHTML='📋 Copy '+lbl;b.classList.remove('copied');},2000);
+  });
+}
+
+function cpAll(w){
+  let txt='';
+  if(w==='daily'){const e=D[di];const m=document.getElementById('d-moment').value.trim()||'[YOUR BROWNDOG MOMENT]';txt=e.top+'\n\n'+m+'\n\n'+e.closer;}
+  else{const d=G[gi];txt=d.script+'\n\n'+d.closer;}
+  navigator.clipboard.writeText(txt).then(()=>{
+    const b=document.getElementById(w+'-all');
+    b.textContent='✓ Copied!';b.classList.add('copied');
+    setTimeout(()=>{b.innerHTML='📋 Copy Full Script';b.classList.remove('copied');},2000);
+  });
+}
+
+function clrM(){document.getElementById('d-moment').value='';dM[di]='';updD();redoMic();}
+
+// ── VOICE INPUT ───────────────────────────────────────────────
+let recog=null, listening=false;
+
+function initSpeech(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){
+    document.getElementById('voice-status').textContent='Voice input not supported in this browser. Use Chrome on Android or Safari on iPhone.';
+    document.getElementById('mic-btn').style.opacity='0.3';
+    document.getElementById('mic-btn').style.pointerEvents='none';
+    return;
+  }
+  recog=new SR();
+  recog.continuous=true;
+  recog.interimResults=true;
+  recog.lang='en-US';
+
+  recog.onstart=()=>{
+    listening=true;
+    const btn=document.getElementById('mic-btn');
+    const st=document.getElementById('voice-status');
+    btn.classList.add('listening');
+    btn.textContent='⏹';
+    st.className='voice-status active';
+    st.textContent='Listening... tap to stop';
+    document.getElementById('redo-btn').classList.remove('show');
+  };
+
+  recog.onresult=(e)=>{
+    let interim='', final='';
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      if(e.results[i].isFinal) final+=e.results[i][0].transcript;
+      else interim+=e.results[i][0].transcript;
+    }
+    const ta=document.getElementById('d-moment');
+    const base=ta.dataset.base||'';
+    ta.value=(base+final+interim).trim();
+    if(final) ta.dataset.base=base+final;
+    updD();
+  };
+
+  recog.onerror=(e)=>{
+    if(e.error==='no-speech') return;
+    stopMic();
+    document.getElementById('voice-status').textContent='Mic error: '+e.error+'. Try again.';
+  };
+
+  recog.onend=()=>{ if(listening) stopMic(); };
+}
+
+function toggleMic(){
+  if(!recog) initSpeech();
+  if(!recog) return;
+  if(listening) stopMic(); else startMic();
+}
+
+function startMic(){
+  const ta=document.getElementById('d-moment');
+  ta.dataset.base=ta.value?(ta.value.trim()+' '):'';
+  try{ recog.start(); } catch(e){}
+}
+
+function stopMic(){
+  listening=false;
+  try{ recog.stop(); } catch(e){}
+  const btn=document.getElementById('mic-btn');
+  const st=document.getElementById('voice-status');
+  btn.classList.remove('listening');
+  btn.textContent='🎙';
+  showRedoIfText();
+  const val=document.getElementById('d-moment').value.trim();
+  st.className='voice-status';
+  st.textContent=val?'Got it. Edit above if needed.':'Tap the mic to speak your moment';
+}
+
+function showRedoIfText(){
+  const val=document.getElementById('d-moment').value.trim();
+  const rb=document.getElementById('redo-btn');
+  if(val){rb.classList.add('show');}
+  else{rb.classList.remove('show');}
+}
+
+function redoMic(){
+  const ta=document.getElementById('d-moment');
+  ta.value='';ta.dataset.base='';
+  dM[di]='';updD();
+  document.getElementById('redo-btn').classList.remove('show');
+  document.getElementById('voice-status').textContent='Tap the mic to speak your moment';
+}
+
+initSpeech();
+function x(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+init();
+</script>
+</body>
+</html>
