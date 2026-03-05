@@ -314,9 +314,12 @@ function loadG(i){
   document.getElementById('g-title').textContent=d.title;
   document.getElementById('g-desc').textContent=d.desc;
   let html='';
-  d.script.split('\n').forEach(l=>{
-    if(l.startsWith("Hey, I'm Vale"))html+=`<span class="wlc">${x(l)}</span>\n`;
-    else html+=x(l)+'\n';
+  const lines=d.script.split('\\n');
+  lines.forEach((l,idx)=>{
+    const escaped=x(l);
+    if(!escaped){html+='<br>';return;}
+    if(l.startsWith("Hey, I'm Vale"))html+=`<span class="wlc">${escaped}</span><br>`;
+    else html+=escaped+'<br>';
   });
   document.getElementById('g-script').innerHTML=html;
   document.getElementById('g-meta').innerHTML=`<span class="dtag">⏱ ${d.time}</span><span class="dtag">📍 ${d.loc}</span>`;
