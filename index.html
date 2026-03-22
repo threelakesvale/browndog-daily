@@ -129,6 +129,7 @@
     <button class="nav-btn" onclick="chg(1,'daily')">›</button>
   </div>
   <div class="card">
+    <div class="section"><div class="lbl lbl-g">🎙 Browndog Moment Prompt</div><div class="prompt-box" id="d-prompt"></div></div>
     <div class="section"><div class="lbl lbl-n"><span class="sdot" id="d-dot"></span>📻 Recording Script</div><div class="script-box" id="d-script"></div></div>
     <div class="section"><div class="lbl" style="color:var(--orange)">👋 Sign Off</div><div class="closer-pill" id="d-closer"></div></div>
   </div>
@@ -447,6 +448,7 @@ function loadD(i){
   di=parseInt(i);
   document.getElementById('dsel').value=i;
   const e=D[di];
+  document.getElementById('d-prompt').textContent=e.prompt;
   document.getElementById('d-closer').textContent=e.closer;
   document.getElementById('d-title').textContent=e.title;
   document.getElementById('d-desc').textContent=e.desc;
@@ -465,11 +467,11 @@ function rendScript(e,beats){
   let html='';
   html+=x(p.hook)+'\n\n';
   html+=`<span class="wlc">${x(p.welcome)}</span>\n`;
-  html+=`<span class="plan-intro">Three minutes. Three things. Let's go.</span>\n\n`;
-  html+=`<span class="plan-lbl">Create some joy for yourself —</span>\n`;
+  html+=`<span class="plan-intro">Your Daily Joy Plan — just 3 things.</span>\n\n`;
+  html+=`<span class="plan-lbl">First, create some joy for yourself —</span>\n`;
   html+=x(p.create)+'\n';
   html+=beatWidget(0,beats[0]);
-  html+=`<span class="plan-lbl">An idea for connecting in real life —</span>\n`;
+  html+=`<span class="plan-lbl">Now, an idea for connecting in real life —</span>\n`;
   html+=x(p.share)+'\n';
   html+=beatWidget(1,beats[1]);
   html+=`<span class="plan-lbl">And get one thing done —</span>\n`;
@@ -592,7 +594,7 @@ function cpAll(w){
     const b0=beats[0].trim()||'[YOUR BEAT]';
     const b1=beats[1].trim()||'[YOUR BEAT]';
     const b2=beats[2].trim()||'[YOUR BEAT]';
-    txt=p.hook+'\n\nHey, I\'m Vale. This is Browndog Daily.\n\nThree minutes. Three things. Let\'s go.\n\nCreate some joy for yourself — '+p.create+' '+b0+'\n\nAn idea for connecting in real life — '+p.share+' '+b1+'\n\nAnd get one thing done — '+p.done+' '+b2+'\n\nNow go create some joy, connect with someone in real life, and get something done. Love. Love. Catch you tomorrow.';
+    txt=p.hook+'\n\nHey, I\'m Vale. This is Browndog Daily.\n\nYour Daily Joy Plan — just 3 things.\n\nFirst, create some joy for yourself — '+p.create+' '+b0+'\n\nNow, an idea for connecting in real life — '+p.share+' '+b1+'\n\nAnd get one thing done — '+p.done+' '+b2+'\n\nNow go create some joy, connect with someone in real life, and get something done. Love. Love. Catch you tomorrow.';
   } else {
     const d=G[gi];const m=gM[gi]||'[YOUR BROWNDOG MOMENT]';txt=d.script+'\n\n'+m+'\n\n'+d.closer;
   }
