@@ -116,11 +116,6 @@
     <div class="checkin-title">Before you record</div>
     <div class="checkin-q"><span class="checkin-num">1</span><span class="checkin-text">Who are you actually talking to right now? Picture one specific person.</span></div>
     <div class="checkin-q"><span class="checkin-num">2</span><span class="checkin-text">What's the one true thing in today's episode? Not the clever thing — the real one.</span></div>
-    <div style="margin-top:10px;display:flex;align-items:center;gap:10px">
-      <button class="suggest-btn" id="suggest-btn" onclick="suggestBeats()">✨ Suggest my beats</button>
-      <span class="suggest-status" id="suggest-status">AI writes a draft — you make it yours</span>
-    </div>
-    <button class="checkin-collapse" onclick="toggleCheckin()">▲ I'm ready — collapse this</button>
   </div>
 
   <div class="date-nav">
@@ -129,8 +124,11 @@
     <button class="nav-btn" onclick="chg(1,'daily')">›</button>
   </div>
   <div class="card">
-    <div class="section"><div class="lbl lbl-g">🎙 Browndog Moment Prompt</div><div class="prompt-box" id="d-prompt"></div></div>
     <div class="section"><div class="lbl lbl-n"><span class="sdot" id="d-dot"></span>📻 Recording Script</div><div class="script-box" id="d-script"></div></div>
+    <div class="suggest-bar">
+      <button class="suggest-btn" id="suggest-btn" onclick="suggestBeats()">✨ Suggest my beats</button>
+      <span class="suggest-status" id="suggest-status">AI writes a draft — you make it yours</span>
+    </div>
     <div class="section"><div class="lbl" style="color:var(--orange)">👋 Sign Off</div><div class="closer-pill" id="d-closer"></div></div>
   </div>
   <div class="spotify-sec">
@@ -142,7 +140,6 @@
   </div>
   <div class="actions">
     <button class="btn-all" id="d-all" onclick="cpAll('daily')">📋 Copy Full Script</button>
-    <button class="btn-clr" onclick="clrBeats()">Clear my beats</button>
   </div>
 </div>
 
@@ -157,10 +154,18 @@
     <div class="section"><div class="lbl lbl-n">🤝 The Good Deed</div><div class="script-box" id="g-script" style="font-size:15px"></div><div class="deed-meta" id="g-meta"></div></div>
     <div class="section">
       <div class="lbl lbl-g">🎙 Browndog Moment Prompt</div>
-      <div class="prompt-box" id="g-moment-prompt" style="margin-bottom:10px"></div>
-      <div class="lbl lbl-p">✍️ Your Browndog Moment — type or speak</div>
-      <textarea class="moment-input" id="g-moment" placeholder="Why does this deed specifically get you? One specific memory, person, or moment..." oninput="gMChanged()" rows="3"></textarea>
+      <div class="prompt-box" id="g-prompt"></div>
+      <div style="margin-top:12px">
+        <div class="lbl lbl-p">✍️ Your Browndog Moment — type or speak</div>
+        <textarea class="moment-input" id="g-moment" placeholder="One or two real sentences. A memory, a person, a moment this deed reminds you of. Something specific." oninput="updG();gShowRedo()" rows="4"></textarea>
+        <div class="voice-bar">
+          <button class="mic-btn" id="g-mic-btn" onclick="toggleGMic()" title="Tap to speak your moment">🎙</button>
+          <span class="voice-status" id="g-voice-status">Tap the mic to speak your moment</span>
+          <button class="redo-btn" id="g-redo-btn" onclick="redoGMic()">↺ Redo</button>
+        </div>
+      </div>
     </div>
+    <div class="section"><div class="lbl lbl-n"><span class="sdot" id="g-dot"></span>📻 Full Script Preview</div><div class="script-box" id="g-full-script" style="font-size:15px"></div></div>
     <div class="section"><div class="lbl" style="color:var(--orange)">👋 Sign Off</div><div class="closer-pill" id="g-closer"></div></div>
   </div>
   <div class="spotify-sec">
@@ -423,7 +428,7 @@ const G=[
 {n:91,title:"Browndog Daily | Good Deed -- The Extra Grocery Bag (Food Bank)",desc:"You're at the store anyway. Grab a few extra items. Drop them in the food bank bin. browndog.com/good-deeds-finder",time:"30 Minutes",loc:"In My Neighborhood",closer:"Love. Love. Grab the extra bag.",script:"Today from the Good Deeds Finder.\n\nHey, I'm Vale. This is Browndog Daily.\n\nToday's good deed: The Extra Grocery Bag. You're at the store anyway. Grab a few extra non-perishable items and drop them in the food bank donation bin on your way out.\n\nThirty minutes. Already on your way."}
 ];
 
-let di=16,gi=0,dBeats={},gM={};
+let di=24,gi=0,dBeats={},gM={};
 
 function switchTab(t){
   document.getElementById('panel-daily').style.display=t==='daily'?'block':'none';
@@ -448,7 +453,6 @@ function loadD(i){
   di=parseInt(i);
   document.getElementById('dsel').value=i;
   const e=D[di];
-  document.getElementById('d-prompt').textContent=e.prompt;
   document.getElementById('d-closer').textContent=e.closer;
   document.getElementById('d-title').textContent=e.title;
   document.getElementById('d-desc').textContent=e.desc;
@@ -504,23 +508,78 @@ function clrBeats(){
 async function suggestBeats(){
   const btn=document.getElementById('suggest-btn');
   const st=document.getElementById('suggest-status');
-  btn.textContent='✨ Thinking...';btn.classList.add('loading');btn.disabled=true;st.textContent='Generating...';
+  btn.textContent='✨ Thinking...';btn.classList.add('loading');btn.disabled=true;
+  st.textContent='Generating...';
   const e=D[di];const p=parseActions(e.top);
   try{
+    let apiKey=localStorage.getItem('bd_api_key');
+    if(!apiKey){
+      apiKey=window.prompt('One-time setup: paste your Anthropic API key. It stays in this browser only.');
+      if(!apiKey){st.textContent='API key required';return;}
+      localStorage.setItem('bd_api_key',apiKey.trim());
+    }
     const resp=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',headers:{'Content-Type':'application/json'},
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key':apiKey.trim(),
+        'anthropic-version':'2023-06-01'
+      },
       body:JSON.stringify({
         model:'claude-sonnet-4-20250514',max_tokens:600,
         messages:[{role:'user',content:`You write for Vale, host of Browndog Daily — a 60-second daily podcast in Lakeway, Texas (Austin suburb on Lake Travis). Vale is building 1845.ai / Browndog. Her voice is dry, warm, self-deprecating, occasionally funny. Never judgy about others — humor is always about herself.\n\nHer world: Lakeway / Lake Travis / the HEB on 620 / bluebonnets on 71 in March / building a startup at 11pm / cold coffee forgotten on the counter / the neighbor whose dog she knows better than their name / the gap between intending to do something and actually doing it.\n\nGenerate 3 beats — one per action. Each 1-3 sentences Vale could read directly or edit. Make them DIFFERENT: one funny, one honest, one warm.\n\nDate: ${e.date}, ${e.day}\nHook: ${p.hook}\n\nActions:\n1. ${p.create}\n2. ${p.share}\n3. ${p.done}\n\nReturn ONLY a valid JSON array with exactly 3 strings. No preamble, no markdown.\nExample: ["Mine is the first Saturday I can take my coffee outside without regretting it. I have been waiting since October.", "I'm thinking of one specific person right now — she called me last month when I was having a rough week and I still haven't called back. Today.", "I know the recycling has been in my car for four days. We don't need to discuss it."]`}]
       })
     });
+    if(!resp.ok){
+      const errText=await resp.text();
+      if(resp.status===401){localStorage.removeItem('bd_api_key');st.textContent='Bad API key — cleared. Try again.';}
+      else{st.textContent='Error '+resp.status+': '+errText.substring(0,120);}
+      return;
+    }
     const data=await resp.json();
     const raw=data.content.filter(c=>c.type==='text').map(c=>c.text).join('');
     const beats=JSON.parse(raw.replace(/```json|```/g,'').trim());
     if(Array.isArray(beats)&&beats.length===3){dBeats[di]=beats;loadD(di);st.textContent='Edit anything before you record';}
     else{st.textContent='Try again — something came back odd';}
-  }catch(err){console.error(err);st.textContent='Error — check connection and try again';}
-  btn.textContent='✨ Suggest my beats';btn.classList.remove('loading');btn.disabled=false;
+  }catch(err){
+    console.error(err);
+    st.textContent='Caught: '+err.message.substring(0,120);
+  }finally{
+    btn.textContent='✨ Suggest my beats';btn.classList.remove('loading');btn.disabled=false;
+  }
+}
+
+// Good Deeds moment prompts — keyed to deed title keywords
+const G_PROMPTS = {
+  default: "Is there a person in your life who did something like this for you — quietly, without being asked? What did they do?",
+  "episode 0": "This is your intro episode — no Browndog Moment needed. Just record it straight through.",
+  "flowers": "Have you ever given someone flowers for no reason — or received them? What happened?",
+  "bookmark": "Is there a book someone put in your hands at exactly the right moment? Who gave it to you?",
+  "voicemail": "Whose voice do you wish you still had a recording of?",
+  "dog walk": "Has a neighbor ever shown up for you without being asked? What did they do?",
+  "recipe": "What's a recipe in your family that nobody wrote down — and who do you think of when you make it?",
+  "photo": "Is there a photo you have of someone that captures them exactly right? What's the story behind it?",
+  "library": "Did a librarian, a teacher, or a stranger ever hand you something that changed what you thought was possible?",
+  "donation": "Has anyone ever given you something when you needed it — without knowing how much it mattered?",
+  "soup": "Who's the person in your life who shows up with food? What do they always bring?",
+  "bingo": "Who's someone in your life who needs to get out more — and what would it take to get them there?",
+  "memory page": "Is there a memory from your family that almost got lost — that you're glad someone held onto?",
+  "plant": "Did someone ever give you something living — a plant, seeds, a cutting — that you still have?",
+  "grocery": "Has a stranger ever done something small for you in a store or errand run that stuck with you?",
+  "note": "Did you ever find an unexpected note — in a book, on your car, in a pocket — that made your day?",
+  "tutoring": "Who was the person who sat with you when something wasn't clicking — and didn't give up on you?",
+  "sunset": "What's a place near you that you keep meaning to take someone to? Who would you bring?",
+  "emergency": "Who's the person you'd call at 2am if something went wrong — and do they know that?",
+  "skill share": "What's something you know how to do that you've never thought to teach anyone — but probably should?",
+  "history": "Is there something about your street, your town, or your family's history that you almost never learned — and are glad you did?"
+};
+
+function getGPrompt(title){
+  const t = title.toLowerCase();
+  for(const [key,val] of Object.entries(G_PROMPTS)){
+    if(key !== 'default' && t.includes(key)) return val;
+  }
+  return G_PROMPTS.default;
 }
 
 function loadG(i){
@@ -530,9 +589,11 @@ function loadG(i){
   document.getElementById('g-closer').textContent=d.closer;
   document.getElementById('g-title').textContent=d.title;
   document.getElementById('g-desc').textContent=d.desc;
+  document.getElementById('g-moment').value=gM[gi]||'';
+  // deed script
   let html='';
   const lines=d.script.split('\\n');
-  lines.forEach((l,idx)=>{
+  lines.forEach(l=>{
     const escaped=x(l);
     if(!escaped){html+='<br>';return;}
     if(l.startsWith("Hey, I'm Vale"))html+=`<span class="wlc">${escaped}</span><br>`;
@@ -540,38 +601,114 @@ function loadG(i){
   });
   document.getElementById('g-script').innerHTML=html;
   document.getElementById('g-meta').innerHTML=`<span class="dtag">⏱ ${d.time}</span><span class="dtag">📍 ${d.loc}</span>`;
-  const mp=document.getElementById('g-moment-prompt');
-  if(mp){
-    const prompts=["Why does this deed get you every time? Is there someone you learned it from?",
-      "Have you ever had a neighbor show up for you without being asked? What did they do?",
-      "What's a small thing someone did for you once that you still think about?",
-      "Is there a book or note that came to you at exactly the right moment?",
-      "Who in your life is quietly showing up for everyone else and doesn't get thanked enough?",
-      "Have you ever left something for a stranger and wondered if they found it?",
-      "What did someone do for you — small, no big deal to them — that you've never forgotten?",
-      "Is there a version of this deed you've been meaning to do for someone specific?"];
-    mp.textContent=prompts[gi%prompts.length];
-  }
-  const gmt=document.getElementById('g-moment');
-  if(gmt)gmt.value=gM[gi]||'';
+  // prompt
+  document.getElementById('g-prompt').textContent=getGPrompt(d.title);
+  updG();
+  gShowRedo();
 }
 
-function gMChanged(){gM[gi]=document.getElementById('g-moment').value;}
-
-function updD(){
-  const e=D[di],m=document.getElementById('d-moment').value.trim();
-  dM[di]=m;
+function updG(){
+  const d=G[gi];
+  const m=document.getElementById('g-moment').value.trim();
+  gM[gi]=m;
+  document.getElementById('g-dot').className='sdot'+(m?' ready':'');
+  // build full script preview
   let html='';
-  e.top.split('\n').forEach(l=>{
-    if(l.startsWith("Hey, I'm Vale"))html+=`<span class="wlc">${x(l)}</span>\n`;
-    else html+=x(l)+'\n';
+  const lines=d.script.split('\\n');
+  lines.forEach(l=>{
+    const escaped=x(l);
+    if(!escaped){html+='<br>';return;}
+    if(l.startsWith("Hey, I'm Vale"))html+=`<span class="wlc">${escaped}</span><br>`;
+    else html+=escaped+'<br>';
   });
-  html+='\n';
-  if(m){html+=`<span class="mok">${x(m)}</span>`;document.getElementById('d-dot').className='sdot ready';}
-  else{html+=`<span class="mph">[ ✏️ type your moment above ]</span>`;document.getElementById('d-dot').className='sdot';}
-  html+=`\n\n<span class="clsr">${x(e.closer)}</span>`;
-  document.getElementById('d-script').innerHTML=html;
+  html+='<br>';
+  if(m) html+=`<span class="mok">${x(m)}</span>`;
+  else  html+=`<span class="mph">[ ✏️ type your Browndog Moment above ]</span>`;
+  document.getElementById('g-full-script').innerHTML=html;
 }
+
+function clrGMoment(){
+  document.getElementById('g-moment').value='';
+  gM[gi]='';
+  updG();
+  redoGMic();
+}
+
+function gShowRedo(){
+  const val=document.getElementById('g-moment').value.trim();
+  document.getElementById('g-redo-btn').classList.toggle('show', !!val);
+}
+
+// Good Deeds mic
+let gRecog=null, gListening=false;
+
+function initGSpeech(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){
+    document.getElementById('g-voice-status').textContent='Voice input not supported. Use Chrome or Safari.';
+    document.getElementById('g-mic-btn').style.opacity='0.3';
+    document.getElementById('g-mic-btn').style.pointerEvents='none';
+    return;
+  }
+  gRecog=new SR();
+  gRecog.continuous=true;
+  gRecog.interimResults=true;
+  gRecog.lang='en-US';
+  gRecog.onstart=()=>{
+    gListening=true;
+    document.getElementById('g-mic-btn').classList.add('listening');
+    document.getElementById('g-mic-btn').textContent='⏹';
+    document.getElementById('g-voice-status').className='voice-status active';
+    document.getElementById('g-voice-status').textContent='Listening... tap to stop';
+    document.getElementById('g-redo-btn').classList.remove('show');
+  };
+  gRecog.onresult=(e)=>{
+    let interim='',final='';
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      if(e.results[i].isFinal) final+=e.results[i][0].transcript;
+      else interim+=e.results[i][0].transcript;
+    }
+    const ta=document.getElementById('g-moment');
+    const base=ta.dataset.base||'';
+    ta.value=(base+final+interim).trim();
+    if(final) ta.dataset.base=base+final;
+    updG();
+  };
+  gRecog.onerror=(e)=>{ if(e.error!=='no-speech'){stopGMic();} };
+  gRecog.onend=()=>{ if(gListening) stopGMic(); };
+}
+
+function toggleGMic(){
+  if(!gRecog) initGSpeech();
+  if(!gRecog) return;
+  if(gListening) stopGMic(); else startGMic();
+}
+
+function startGMic(){
+  const ta=document.getElementById('g-moment');
+  ta.dataset.base=ta.value?(ta.value.trim()+' '):'';
+  try{ gRecog.start(); } catch(e){}
+}
+
+function stopGMic(){
+  gListening=false;
+  try{ gRecog.stop(); } catch(e){}
+  document.getElementById('g-mic-btn').classList.remove('listening');
+  document.getElementById('g-mic-btn').textContent='🎙';
+  const val=document.getElementById('g-moment').value.trim();
+  document.getElementById('g-voice-status').className='voice-status';
+  document.getElementById('g-voice-status').textContent=val?'Got it. Edit above if needed.':'Tap the mic to speak your moment';
+  gShowRedo();
+}
+
+function redoGMic(){
+  const ta=document.getElementById('g-moment');
+  ta.value='';ta.dataset.base='';
+  gM[gi]='';updG();
+  document.getElementById('g-redo-btn').classList.remove('show');
+  document.getElementById('g-voice-status').textContent='Tap the mic to speak your moment';
+}
+
 
 function chg(dir,w){
   if(w==='daily'){const n=di+dir;if(n>=0&&n<D.length)loadD(n);}
@@ -603,99 +740,6 @@ function cpAll(w){
   if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(txt).then(flash).catch(()=>fallbackCopy(txt,flash));}
   else{fallbackCopy(txt,flash);}
 }
-
-function clrM(){document.getElementById('d-moment').value='';dM[di]='';updD();redoMic();}
-
-// ── VOICE INPUT ───────────────────────────────────────────────
-let recog=null, listening=false;
-
-function initSpeech(){
-  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SR){
-    document.getElementById('voice-status').textContent='Voice input not supported in this browser. Use Chrome on Android or Safari on iPhone.';
-    document.getElementById('mic-btn').style.opacity='0.3';
-    document.getElementById('mic-btn').style.pointerEvents='none';
-    return;
-  }
-  recog=new SR();
-  recog.continuous=true;
-  recog.interimResults=true;
-  recog.lang='en-US';
-
-  recog.onstart=()=>{
-    listening=true;
-    const btn=document.getElementById('mic-btn');
-    const st=document.getElementById('voice-status');
-    btn.classList.add('listening');
-    btn.textContent='⏹';
-    st.className='voice-status active';
-    st.textContent='Listening... tap to stop';
-    document.getElementById('redo-btn').classList.remove('show');
-  };
-
-  recog.onresult=(e)=>{
-    let interim='', final='';
-    for(let i=e.resultIndex;i<e.results.length;i++){
-      if(e.results[i].isFinal) final+=e.results[i][0].transcript;
-      else interim+=e.results[i][0].transcript;
-    }
-    const ta=document.getElementById('d-moment');
-    const base=ta.dataset.base||'';
-    ta.value=(base+final+interim).trim();
-    if(final) ta.dataset.base=base+final;
-    updD();
-  };
-
-  recog.onerror=(e)=>{
-    if(e.error==='no-speech') return;
-    stopMic();
-    document.getElementById('voice-status').textContent='Mic error: '+e.error+'. Try again.';
-  };
-
-  recog.onend=()=>{ if(listening) stopMic(); };
-}
-
-function toggleMic(){
-  if(!recog) initSpeech();
-  if(!recog) return;
-  if(listening) stopMic(); else startMic();
-}
-
-function startMic(){
-  const ta=document.getElementById('d-moment');
-  ta.dataset.base=ta.value?(ta.value.trim()+' '):'';
-  try{ recog.start(); } catch(e){}
-}
-
-function stopMic(){
-  listening=false;
-  try{ recog.stop(); } catch(e){}
-  const btn=document.getElementById('mic-btn');
-  const st=document.getElementById('voice-status');
-  btn.classList.remove('listening');
-  btn.textContent='🎙';
-  showRedoIfText();
-  const val=document.getElementById('d-moment').value.trim();
-  st.className='voice-status';
-  st.textContent=val?'Got it. Edit above if needed.':'Tap the mic to speak your moment';
-}
-
-function showRedoIfText(){
-  const val=document.getElementById('d-moment').value.trim();
-  const rb=document.getElementById('redo-btn');
-  if(val){rb.classList.add('show');}
-  else{rb.classList.remove('show');}
-}
-
-function redoMic(){
-  const ta=document.getElementById('d-moment');
-  ta.value='';ta.dataset.base='';
-  dM[di]='';updD();
-  document.getElementById('redo-btn').classList.remove('show');
-  document.getElementById('voice-status').textContent='Tap the mic to speak your moment';
-}
-
-initSpeech();
 
 // ── SOCIAL DATA ───────────────────────────────────────────────
 const S=[
