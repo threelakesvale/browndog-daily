@@ -660,7 +660,8 @@ function loadD(i){
 
 function parseActions(top){
   const parts=top.split('\n\n');
-  return {hook:parts[0]||'',welcome:parts[1]||'',create:parts[2]||'',share:parts[3]||'',done:parts[4]||''};
+  // parts[0]=hook, [1]=welcome, [2]=framing line, [3]=create, [4]=share, [5]=done
+  return {hook:parts[0]||'',welcome:parts[1]||'',framing:parts[2]||'',create:parts[3]||'',share:parts[4]||'',done:parts[5]||''};
 }
 
 function rendScript(e,beats){
